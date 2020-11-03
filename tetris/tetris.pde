@@ -43,7 +43,7 @@ class Scene {
 
     void draw() {
         for (Component c : _components) {
-            if (c.enabled) c.draw();
+            if (c.isEnabled()) c.draw();
         }
     }
 }
@@ -53,13 +53,14 @@ class Scene {
  */
 class Component {
     /** falseだとSceneからdraw()を呼ばれない */
-    boolean enabled = true;
+    boolean _enabled = true;
     float _x;
     float _y;
     float _w;
     float _h;
     /** Component上にマウスカーソルがあるかどうか */
     boolean _onMouse;
+    ArrayList<Component> _childComponents = new ArrayList<Component>();
 
     Component(float x, float y, float w, float h) {
         _x = x;
@@ -73,6 +74,21 @@ class Component {
 
     void draw() {
         _onMouse = (_x <= mouseX && mouseX <= _x+_w && _y <= mouseY && mouseY <= _y+_h);
+        for (Component c : _childComponents){
+            if (c.isEnabled()) c.draw();
+        }
+    }
+
+    boolean isEnabled() {
+        return _enabled;
+    }
+    void setEnabled(boolean enable){
+        _enabled = enable;
+    }
+
+    void addChildComponent(Component c){
+        c.setup();
+        _childComponents.add(c);
     }
 }
 
