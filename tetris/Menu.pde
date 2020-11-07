@@ -17,6 +17,7 @@ class SMenu extends Scene {
     void draw(){
         super.draw();
         if (_btnStart.isClicked()){
+            // app.changeScene(new SPlay());
             println("Start pressed!");
         }
     }
