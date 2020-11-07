@@ -30,6 +30,10 @@ class CRankingTable extends Component {
     ArrayList<RankingEntry> _rankingData;
     int _columnSize = 50;
 
+    int _textSize;
+    float _pointX;
+    float _timeX;
+
     /** 
      * 1列のサイズを指定することで，コンポーネントの高さに入り切るだけ表示する.
      * @param columnSize 列のサイズ
@@ -37,6 +41,9 @@ class CRankingTable extends Component {
     CRankingTable(float x, float y, float w, float h, int columnSize){
         super(x, y, w, h);
         _columnSize = columnSize;
+        _textSize = _columnSize - 10;
+        _pointX = x + (_textSize/2)*3;
+        _timeX = (x+w) - (_textSize/2)*5;
     }
 
     /**
@@ -46,12 +53,13 @@ class CRankingTable extends Component {
     void load(String path){
         String[] lines = loadStrings(path);
         if (lines == null){
-            println("Not exist ranking.dat");
+            println("Not exist : "+path);
             _rankingData = new ArrayList<RankingEntry>();
             return;
         }
         for (String line : lines){
             String[] temp = line.split(",");
+            if (temp.length != 2) continue;
             int point = Integer.parseInt(temp[0]);
             int aliveTime = Integer.parseInt(temp[1]);
             _rankingData.add(new RankingEntry(point, aliveTime));
@@ -76,13 +84,21 @@ class CRankingTable extends Component {
     @Override
     void draw(){
         super.draw();
-        textSize(_columnSize-10);
-        textAlign(CENTER, CENTER);
+        textSize(_textSize);
         fill(0, 0, 0);
-        text("Rank Point AliveTime", _x, _y, _w, _columnSize);
+        textAlign(CENTER, CENTER);
+        text("Point", _pointX, _y, _timeX-_pointX, _columnSize);
+        // textAlign(RIGHT, CENTER);
+        text("Time", _timeX, _y, _w-_timeX, _columnSize);
         for (int i=0; (_columnSize*i < _w-_columnSize) && (i < _rankingData.size()); i++){
             RankingEntry e = _rankingData.get(i);
-            text(i+1 + ". " + e.point + " " + formatTime(e.aliveTime), _x, _y+(_columnSize*(i+1)), _w, _columnSize);
+            float y = _y + (_columnSize*(i+1));
+            textAlign(LEFT, CENTER);
+            text(i+1 + ".", _x, y, _pointX, _columnSize);
+            textAlign(CENTER, CENTER);
+            text(e.point + "", _pointX, y, _timeX-_pointX, _columnSize);
+            textAlign(RIGHT, CENTER);
+            text(formatTime(e.aliveTime), _timeX, y, _w-_timeX, _columnSize);
         }
     }
 }
@@ -102,7 +118,7 @@ class SRanking extends Scene {
     @Override
     void setup(){
         super.setup();
-        _table = new CRankingTable(320, 80, 640, 200, 52);
+        _table = new CRankingTable(270, 80, 740, 200, 52);
         addComponent(_table);
         _retryBtn = new CButton(940, 600, 140, 50, "Retry");
         if (_showRetry) addComponent(_retryBtn);
