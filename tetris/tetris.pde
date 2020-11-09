@@ -1,8 +1,3 @@
-import java.io.File;
-import java.time.Duration;
-import java.util.Comparator;
-import java.util.Collections;
-
 class Tetris extends Application {
     Tetris() {
         super();
@@ -11,6 +6,7 @@ class Tetris extends Application {
     @Override
     void setup(){
         super.setup();
+        // addRanking(500, 500);
         changeScene(new SRanking(true));
     }
 }
@@ -32,8 +28,4 @@ void draw() {
     _lastMousePressed = mousePressed;
 
     app.draw();
-}
-
-void saveRanking(){
-
 }
