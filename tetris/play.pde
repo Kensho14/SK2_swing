@@ -1,19 +1,27 @@
 import java.util.ArrayList;
 import java.util.Collections;
 
-class CTetrisEnv{
-    TetrisController tetris = new TetrisController();
-
-    void draw(){
-        tetris.draw();
-    }
-}
-
 class SPlay extends Scene{
-    CTetrisEnv tetrisEnv = new CTetrisEnv();
+    CTetrisEnv tetrisEnv;
+
+    SPlay(){
+        tetrisEnv = new CTetrisEnv();
+    }
 
     void draw(){
         tetrisEnv.draw();
+    }
+}
+
+class CTetrisEnv{
+    TetrisController tetris;
+
+    CtetrisEnv(){
+        tetris = new TetrisController();
+    }
+
+    void draw(){
+        tetris.draw();
     }
 }
 
@@ -32,14 +40,18 @@ class TetrisController{
 }
 
 class Stage extends Component{
-    Coordinate movingMinoCoordinate;
+    Coordinate _movingMinoCoordinate;
+    int _movingMinoTickCount;
+    boolean _minoMovingFlag;
+    Mino currentMino;
     ArrayList<ArrayList<Integer>> _stage;
     int width;
     int height;
 
     void init(int width,int height){
         _stage = new ArrayList<ArrayList<Integer>>();
-        _setStageSize(width,height);
+        _minoMovingFlag = false;
+        _setStageSize(width,height+4);
     }
 
     void _setStageSize(int width,int height){
@@ -66,14 +78,25 @@ class Stage extends Component{
         return true;
     }
 
-    void checkLinesFull(){
-        for(int i=0;i<_stage.size();i++){
+    boolean isMinoMoving(){
+        return this.MinoMovingFlag;
+    }
+
+    void generateMino(Mino mino){
+        this.currentMino = mino;
+    }
+
+    int checkLinesFull(){
+        int fullLinesAmount = 0;
+        for(int i=_stage.size()-1;i<=0;i++){
             ArrayList<Integer> targetLine = _stage.get(i);
             if(isLineFull(targetLine)){
                 _removeLine(i);
                 _addLines(1);
+                fullLinesAmount++;
             }
         }
+        return fullLinesAmount;
     }
 
     void _removeLine(int lineNum){
@@ -86,6 +109,35 @@ class Stage extends Component{
         }
     }
 
+    void moveLeft(){
+
+    }
+
+    void moveRight(){
+
+    }
+
+    void drop(){
+
+    }
+
+    void hardDrop(){
+
+    }
+
+    void hold(){
+
+    }
+
+    boolean isLanding(){
+
+    }
+
+    void downMino(){
+
+    }
+
+    void 
     @override
     void draw(){
 
@@ -134,7 +186,9 @@ class TetrisMinoGenerator{
 }
 
 class Mino{
+    int colorID;
     Coordinate[][] coordinate;
+
     enum MinoTypes {
         IMino,
         OMino,
@@ -146,7 +200,26 @@ class Mino{
     }
 
     Mino(MinoTypes type) {
+        switch(MinoTypres){
+            case IMino:
+                buildMino(4,);
+                break;
+            case OMino:
+                buildMino(4,);
+                break;
+            default:
         
+        }
+    }
+
+    void buildMino(int amount,int[][][] data){
+        Coordinete coordinate[][] = new Coordinate[amount][4];
+        for(int i=0;i<4,i++){
+            for(int j=0;j<amount;j++){
+                coordinate[i][j] = new Coordinate(data[i][j][0],[i][j][1]);
+            }
+        }
+        this.coordinate = coordinate;
     }
 }
 
