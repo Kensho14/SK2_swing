@@ -3,14 +3,21 @@ import java.util.Collections;
 import java.util.HashMap;
 
 class SPlay extends Scene{
-    CTetrisEnv tetrisEnv;
+    CTetrisEnv _tetrisEnv;
 
     SPlay(){
-        tetrisEnv = new CTetrisEnv();
+        super();
+    }
+
+    @Override
+    void setup(){
+        super.setup();
+        _tetrisEnv = new CTetrisEnv();
+        addComponent(tetrisEnv);
     }
 
     void draw(){
-        tetrisEnv.draw();
+        super.draw();
     }
 }
 
@@ -23,47 +30,49 @@ class CTetrisEnv extends Component{
     }
 
     void draw(){
-        tetris.draw();
+        // ここで描画する
     }
 }
 
 class TetrisCore{
     int _WIDTH = 10;
     int _HEIGHT = 20;
-    char pressedKey;
     Stage _stage = new Stage();
     TetrisMinoGenerator minoGenerator;
-    char[] keyset1 = {'w','d','s','a','g','h'};
 
     TetrisController(){
         minoGenerator  = new TetrisMinoGenerator();
         _stage.init(_WIDTH,_HEIGHT);
     }
 
-    void minaFlow(){
+    void mainFlow(){
         minoGenerator.update();
         if(!_stage.isMinoMoving()){
             Mino temp = minoGenerator.takeWaitingMino(0);
             _stage.generateMino(temp);
         }
 
-        switch(pressedKey){
-
+        switch(){
+            
         }
 
     }
 
-    char pressedKey(){
-        for(char sample:keyset1){
-            if(sample==){
+    /**
+     * 最終的な計算された盤面の２次元配列を返す
+     * @return int[][] 盤面
+     */
+    void getStage(){
 
-            }
-        }
     }
+
 }
 
 class Input{
     HashMap<Character,Boolean> _states;
+    char pressedKey;
+    char[] keyset1 = {'w','d','s','a','g','h'};
+
     Input(char[] keySet){
         _states = new HashMap<>();
         init(keySet);
@@ -80,7 +89,7 @@ class Input{
     }
 
     void keyStateUpdate(){
-
+                
     }
 
     void keyPressed() {
@@ -289,8 +298,7 @@ class TetrisMinoGenerator{
 }
 
 class Mino{
-    int colorID;
-    int _rotateState;
+    int colorIDIndexshapwes    int _rotateState;
     Coordinate[][] _coordinate;
 
     enum MinoTypes {
@@ -318,11 +326,10 @@ class Mino{
                 this.colorID = 2;
                 int[][][] temp2 = {{{-1,-1},{-1,0},{0,-1},{0,0}},
                         {{-1,-1},{-1,0},{0,-1},{0,0}},
-                        {{-1,-1},{-1,0},{0,-1},{0,0}},
-                        {{-1,-1},{-1,0},{0,-1},{0,0}}};
                 buildMino(4,temp2);
                 break;
             default:
+                break;
         }
     }
 
@@ -340,8 +347,8 @@ class Mino{
         return _coordinate;
     }
 
-    int getRotateState(){
-        return this._rotateState;
+    Coordinate[]shapestShape(){
+        return _coordinate[_rotateState]
     }
 }
 
