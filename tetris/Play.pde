@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -21,6 +20,8 @@ class SPlay extends Scene{
     }
 }
 
+color[] MINO_COLORS = new int[7] { new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0) };
+
 class CTetrisEnv extends Component{
     TetrisController tetris;
 
@@ -29,8 +30,11 @@ class CTetrisEnv extends Component{
         tetris = new TetrisCore();
     }
 
+    @Override
     void draw(){
+        super.draw();
         // ここで描画する
+        tetris.update();
     }
 }
 
@@ -40,29 +44,24 @@ class TetrisCore{
     Stage _stage = new Stage();
     TetrisMinoGenerator minoGenerator;
 
-    TetrisController(){
+    TetrisCore(){
         minoGenerator  = new TetrisMinoGenerator();
         _stage.init(_WIDTH,_HEIGHT);
     }
 
-    void mainFlow(){
-        minoGenerator.update();
+    void update(){
+        //毎フレーム呼び出される
         if(!_stage.isMinoMoving()){
             Mino temp = minoGenerator.takeWaitingMino(0);
             _stage.generateMino(temp);
         }
-
-        switch(){
-            
-        }
-
     }
 
     /**
      * 最終的な計算された盤面の２次元配列を返す
      * @return int[][] 盤面
      */
-    void getStage(){
+    int[][] getStage(){
 
     }
 
@@ -101,7 +100,7 @@ class Input{
     }
 }
 
-class Stage extends Component{
+class Stage{
     Coordinate _movingMinoCoordinate;
     int _movingMinoTickCount;
     boolean _minoMovingFlag;
@@ -161,7 +160,7 @@ class Stage extends Component{
         for(int i=_stage.size()-1;i<=0;i--){
             ArrayList<Integer> targetLine = _stage.get(i);
             if(isLineFull(targetLine)){
-                _removeLine(i);
+                _removeLine(i);//TODO: iterator使う
                 _addLines(1);
                 fullLinesAmount++;
             }
@@ -230,15 +229,9 @@ class Stage extends Component{
     boolean isLanding(){
         return true;
     }
-
-    @override
-    void draw(){
-
-    }
 }
 
-
-class Hold{
+class Hold{//TODO: LogicはCoreに移す
     Mino mino = null;
 
     boolean isHoldExist(){
@@ -267,12 +260,6 @@ class TetrisMinoGenerator{
         _generate();
     }
 
-    void update(){
-        if(_waitingMinoList.size()<10){
-            _generate();
-        }
-    }
-
     void _generate(){
         ArrayList<Mino> list = new ArrayList<Mino>();
         list.add(new Mino(Mino.MinoTypes.IMino));
@@ -286,20 +273,26 @@ class TetrisMinoGenerator{
         _waitingMinoList.addAll(list);
     }
 
+    /** Next用 */
     Mino getWaitingMino(int i){
         return _waitingMinoList.get(i);
     }
 
+    /** ひとつ取り出す */
     Mino takeWaitingMino(int i){
         Mino temp = _waitingMinoList.get(i);
         _waitingMinoList.remove(i);
+        if(_waitingMinoList.size()<10){
+            _generate();
+        }
         return temp;
     }
 }
 
 class Mino{
-    int colorIDIndexshapwes    int _rotateState;
-    Coordinate[][] _coordinate;
+    int _colorID;
+    int _rotateIndex;
+    Coordinate[][] _shapes;
 
     enum MinoTypes {
         IMino,
@@ -312,43 +305,48 @@ class Mino{
     }
 
     Mino(MinoTypes type) {
-        _rotateState = 0;
+        _rotateIndex = 0;
         switch(type){
             case IMino:
                 this.colorID = 1;
-                int[][][] temp1 = {{{-1,0},{0,0},{1,0},{2,0}},
-                        {{0,-2},{0,-1},{0,0},{0,1}},
-                        {{-2,0},{-1,0},{0,0},{1,0}},
-                        {{0,-1},{0,0},{0,1},{0,2}}};
-                buildMino(4,temp1);
+                _buildMino(4, 
+                    new int[][][] {{{-1,0},{0,0},{1,0},{2,0}},
+                    {{0,-2},{0,-1},{0,0},{0,1}},
+                    {{-2,0},{-1,0},{0,0},{1,0}},
+                    {{0,-1},{0,0},{0,1},{0,2}}}
+                );
                 break;
             case OMino:
                 this.colorID = 2;
                 int[][][] temp2 = {{{-1,-1},{-1,0},{0,-1},{0,0}},
-                        {{-1,-1},{-1,0},{0,-1},{0,0}},
-                buildMino(4,temp2);
+                        {{-1,-1},{-1,0},{0,-1},{0,0}}};
+                _buildMino(4,temp2);
                 break;
             default:
                 break;
         }
     }
 
-    void buildMino(int amount,int[][][] data){
-        Coordinate[][] coordinate = new Coordinate[amount][4];
-        for(int i=0;i<4;i++){
-            for(int j=0;j<amount;j++){
-                coordinate[i][j] = new Coordinate(data[i][j][0],data[i][j][1]);
+    void _buildMino(int[][][] data){
+        int blockSize = data[0].length;
+        Coordinate[][] shapes = new Coordinate[4][blockSize];
+        for(int i=0; i<4; i++){
+            for(int j=0; j<blockSize; j++){
+                shapes[i][j] = new Coordinate(data[i][j][0], data[i][j][1]);
             }
         }
-        this._coordinate = coordinate;
+        this._shapes = shapes;
     }
 
-    Coordinate[][] getCoordinate() {
-        return _coordinate;
+    Coordinate[] getCurrentShape(){
+        return _shapes[_rotateIndex];
     }
 
-    Coordinate[]shapestShape(){
-        return _coordinate[_rotateState]
+    void rotate(boolean leftRotate){
+        if (leftRotate) _rotateIndex--;
+        else _rotateIndex++;
+        if (_rotateIndex < 0) _rotateIndex = 3;
+        if (_rotateIndex > 3) _rotateIndex = 0;
     }
 }
 
@@ -357,10 +355,11 @@ class Coordinate{
     int y;
 
     Coordinate(){
-
+        this.x = 0;
+        this.y = 0;
     }
 
-    Coordinate(int x,int y){
+    Coordinate(int x, int y){
         this.x = x;
         this.y = y;
     }
