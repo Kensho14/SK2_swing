@@ -27,7 +27,7 @@ class SMenu extends Scene {
             println("Start pressed!");
         }
         if (_btnRanking.isClicked()){
-            app.changeScene(new SRanking());
+            app.changeScene(new SRanking(false));
             println("Ranking pressed!");
         }
         if (_btnend.isClicked()){

@@ -7,7 +7,7 @@ class Tetris extends Application {
     void setup(){
         super.setup();
         // addRanking(500, 500);
-        changeScene(new SRanking(true));
+        changeScene(new SMenu());
     }
 }
 
