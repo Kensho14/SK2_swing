@@ -61,8 +61,9 @@ class TetrisCore{
         //毎フレーム呼び出される
         _input.update();
         if(_stage.getCurrentMino()==null){
-            _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
-            _stage.minoPositionInit();
+            minoInit(_minoGenerator.takeWaitingMino(0));
+            /*_stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+            _stage.minoPositionInit();*/
             this._movingMinoTickCount = 0;
         }
 
@@ -81,8 +82,9 @@ class TetrisCore{
             if(isOverFromStage){
                 gameOver();
             }
-            _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
-            _stage.minoPositionInit();
+            minoInit(_minoGenerator.takeWaitingMino(0));
+            /*_stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+            _stage.minoPositionInit();*/
             _movingMinoTickCount = 0;
         }
         if(_input.isKeyClicked("leftRotate")){
@@ -104,18 +106,19 @@ class TetrisCore{
                 if(isOverFromStage){
                     gameOver();
                 }
-                _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
-                _stage.minoPositionInit();
+                minoInit(_minoGenerator.takeWaitingMino(0));
+               /* _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+                _stage.minoPositionInit();*/
                 _movingMinoTickCount = 0;
             }
         }
     }
 
     void gameOver(){
-        //ゲームオーバーの処理
-        //秒数も実装するの？
-        //addRanking(_score,100);
-        //app.changeScene(new SRanking());
+        //addRanking(_score);
+        //changeScene();
+        System.out.println("GameOver");
+        System.exit(1);
     }
 
     void addScore(int deleteLine){
@@ -125,13 +128,12 @@ class TetrisCore{
     void swap(){
         if(_hold==null){
             _hold = _stage.getCurrentMino();
-            _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+            _stage.minoInit(_minoGenerator.takeWaitingMino(0));
         } else{
             Mino temp = this._hold;
             _hold = _stage.getCurrentMino();
-            _stage.setCurrentMino(temp);
+            _stage.minoInit(temp);
         }
-        _stage.minoPositionInit();
     }
     /**
      * 最終的な計算された盤面の２次元配列を返す
@@ -206,7 +208,7 @@ class Input{
 }
 
 class Stage{
-    Coordinate DEFAULT_COORDINATE = new Coordinate(4,19);
+    Coordinate DEFAULT_MINO_SPAWN_COORDINATE = new Coordinate(4,19);
     Coordinate _currentMinoPosition;
     //boolean _minoMovingFlag;
     Mino _currentMino;
@@ -218,22 +220,30 @@ class Stage{
      */
     int HIDDEN_HEIGHT = 4;
 
-    Stage(){
-    }
+    Stage(){}
 
     boolean isOverFromStage(){
-        return _stage._currentMino().y => HEIGHT;
+        int x = DEFAULT_MINO_SPAWN_COORDINATE.x;
+        int y = DEFAULT_MINO_SPAWN_COORDINATE.y;
+        return isBlockFilled(x-1,y)||isBlockFilled(x,y)||isBlockFilled(x+1,y)||isBlockFilled(x+2,y);
     }
 
-    void minoPositionInit(){
-        this._currentMinoPosition = DEFAULT_COORDINATE;
+    /*void minoPositionInit(){
+        this._currentMinoPosition = DEFAULT_MINO_SPAWN_COORDINATE;
         this._currentMino.resetRotateIndex();
-    }
+    }*/
 
     void init(int stageWidth,int stageHeight){
         _stage = new ArrayList<ArrayList<Integer>>();
         //_minoMovingFlag = false;
         _setStageSize(stageWidth,stageHeight+HIDDEN_HEIGHT);
+    }
+
+    void minoInit(Mino mino){
+        setCurrentMino(mino);
+        Coordinate position = DEFAULT_MINO_SPAWN_COORDINATE;
+        this._currentMino.resetRotateIndex();
+        this._currentMinoPosition = new Coordinate(position.x,position.y);
     }
 
     void _setStageSize(int stageWidth,int stageHeight){
@@ -349,7 +359,7 @@ class Stage{
     }
 
     boolean isBlockFilled(int x,int y){
-        if(x<0||y<0||x>this.stageWidth||y>this.stageHeight+HIDDEN_HEIGHT){
+        if(x<0||y<0||x=>this.stageWidth||y=>this.stageHeight+HIDDEN_HEIGHT){
             return true;
         }
         return _stage.get(y).get(x)!=0;
@@ -357,7 +367,7 @@ class Stage{
 
     void placeMino(){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            _stage.get(_currentMinoPosition.x+coordinate.x).set(_currentMinoPosition.y+coordinate.y,_currentMino.getColorID());
+            _stage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColorID());
         }
         //_minoMovingFlag = false;
     }
