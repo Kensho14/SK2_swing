@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -12,7 +13,7 @@ class SPlay extends Scene{
     void setup(){
         super.setup();
         _tetrisEnv = new CTetrisEnv();
-        addComponent(tetrisEnv);
+        addComponent(CTetrisEnv);
     }
 
     void draw(){
@@ -20,10 +21,10 @@ class SPlay extends Scene{
     }
 }
 
-color[] MINO_COLORS = new int[7] { new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0) };
+    color[] MINO_COLORS = new int[7] { new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0) };
 
 class CTetrisEnv extends Component{
-    TetrisController tetris;
+    TetrisCore tetris;
 
     CTetrisEnv(){
         super();
@@ -39,42 +40,103 @@ class CTetrisEnv extends Component{
 }
 
 class TetrisCore{
+    boolean holdFlag;
+    int _DOWN_INTERVAL = 60;
     int _WIDTH = 10;
     int _HEIGHT = 20;
-    Stage _stage = new Stage();
-    TetrisMinoGenerator minoGenerator;
+    int _movingMinoTickCount;
+    Stage _stage;
+    TetrisMinoGenerator _minoGenerator;
+    Input _input;
+    Mino _hold;
 
     TetrisCore(){
-        minoGenerator  = new TetrisMinoGenerator();
+        _minoGenerator  = new TetrisMinoGenerator();
+        _stage = new Stage();
+        _hold = null;
         _stage.init(_WIDTH,_HEIGHT);
     }
 
     void update(){
         //毎フレーム呼び出される
-        if(!_stage.isMinoMoving()){
-            Mino temp = minoGenerator.takeWaitingMino(0);
-            _stage.generateMino(temp);
+        if(_stage.getCurrentMino()==null){
+            _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+            _stage.minoPositionInit();
+            this._movingMinoTickCount = 0;
         }
+        /**
+         * isKeyClicked(String);
+         * 前フレームで押されておらず、今のフレームで押されている場合true, それ以外falseを期待。
+         */
+        if(_input.isKeyClicked("left")){
+            _stage.moveLeft();
+        }
+        if(_input.isKeyClicked("right")){
+            _stage.moveRight();
+        }
+        if(_input.isKeyClicked("drop")){
+            _stage.drop();
+        }
+        if(_input.isKeyClicked("hardDrop")){
+            _stage.hardDrop();
+            _stage.placeMino();
+            _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+            _stage.minoPositionInit();
+            _movingMinoTickCount = 0;
+        }
+        if(_input.isKeyClicked("leftRotate")){
+            _stage._currentMino.rotate(false);
+        }
+        if(_input.isKeyClicked("rightRotate")){
+            _stage._currentMino.rotate(true);
+        }
+        if(_input.isKeyClicked("hold")){
+            if(!holdFlag){
+                swap();
+            }
+        }
+        //ここから自然に落ちる処理
+        _movingMinoTickCount++;
+        if(_movingMinoTickCount<=_DOWN_INTERVAL){
+            if(!_stage.drop()){
+                _stage.placeMino();
+                _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+                _stage.minoPositionInit();
+                _movingMinoTickCount = 0;
+            }
+        }
+        //ゲームオーバーの処理
+        //ちょい待ち
     }
 
+    void swap(){
+        if(_hold==null){
+            _hold = _stage.getCurrentMino();
+            _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
+        } else{
+            Mino temp = this._hold;
+            _hold = _stage.getCurrentMino();
+            _stage.setCurrentMino(temp);
+        }
+        _stage.minoPositionInit();
+    }
     /**
      * 最終的な計算された盤面の２次元配列を返す
      * @return int[][] 盤面
      */
     int[][] getStage(){
-
+        
     }
-
 }
 
-class Input{
+/*class Input{
     HashMap<Character,Boolean> _states;
     char pressedKey;
     char[] keyset1 = {'w','d','s','a','g','h'};
 
-    Input(char[] keySet){
+    Input(int keySetNumber){
         _states = new HashMap<>();
-        init(keySet);
+        init(keyset1);
     }
 
     void init(char[] keySet){
@@ -88,7 +150,7 @@ class Input{
     }
 
     void keyStateUpdate(){
-                
+
     }
 
     void keyPressed() {
@@ -98,28 +160,33 @@ class Input{
     void keyReleased() {
         _states.put(keyCode, false);
     }
-}
+}*/
 
 class Stage{
+    Coordinate DEFAULT_COORDINATE = new Coordinate(4,19);
     Coordinate _movingMinoCoordinate;
-    int _movingMinoTickCount;
-    boolean _minoMovingFlag;
+    //boolean _minoMovingFlag;
     Mino _currentMino;
-    boolean _drawFlag;
     ArrayList<ArrayList<Integer>> _stage;
-    Hold hold;
     int stageWidth;
     int stageHeight;
+    /**
+     * 本来のステージの上に隠れている部分のステージの高さ指定
+     */
     int HIDDEN_HEIGHT = 4;
 
     Stage(){
         super();
-        hold = new Hold;
+    }
+
+    void minoPositionInit(){
+        this._movingMinoCoordinate = DEFAULT_COORDINATE;
+        this._currentMino.resetRotateIndex();
     }
 
     void init(int stageWidth,int stageHeight){
         _stage = new ArrayList<ArrayList<Integer>>();
-        _minoMovingFlag = false;
+        //_minoMovingFlag = false;
         _setStageSize(stageWidth,stageHeight+HIDDEN_HEIGHT);
     }
 
@@ -139,6 +206,13 @@ class Stage{
         _stage.add(tempLine);
     }
 
+    Mino getCurrentMino(){
+        return this._currentMino;
+    }
+
+    void setCurrentMino(Mino mino){
+        this._currentMino = mino;
+    }
 
     boolean isLineFull(ArrayList<Integer> _line){
         for(Integer block:_line){
@@ -147,9 +221,9 @@ class Stage{
         return true;
     }
 
-    boolean isMinoMoving(){
+    /*boolean isMinoMoving(){
         return this._minoMovingFlag;
-    }
+    }*/
 
     void generateMino(Mino mino){
         this._currentMino = mino;
@@ -206,13 +280,9 @@ class Stage{
         }
     }
 
-    void hold(){
-        _currentMino = hold.swap(_currentMino);
-    }
-
     boolean isBlocksFilled(int x,int y){
-        for(Coordinate coordinate:_currentMino.getCoordinate()[_currentMino.getRotateState()]){
-            if(isBlockFilled(coordinate.x + x, coordinate.y + y)){
+        for(Coordinate coordinate:_currentMino.getCurrentShape()){
+            if(isBlockFilled(_movingMinoCoordinate.x+coordinate.x + x, _movingMinoCoordinate.y+coordinate.y + y)){
                 return true;
             }
         }
@@ -226,29 +296,15 @@ class Stage{
         return _stage.get(y).get(x)!=0;
     }
 
-    boolean isLanding(){
-        return true;
-    }
-}
-
-class Hold{//TODO: LogicはCoreに移す
-    Mino mino = null;
-
-    boolean isHoldExist(){
-        return mino!=null;
-    }
-
-    Mino swap(Mino stageMino){
-        if(!isHoldExist()){
-            return null;
+    void placeMino(){
+        for(Coordinate coordinate:_currentMino.getCurrentShape()){
+            _stage.get(_movingMinoCoordinate.x+coordinate.y).set(_movingMinoCoordinate.y+coordinate.y,_currentMino.getColorID());
         }
-        Mino mino = this.mino;
-        this.mino = stageMino;
-        return mino;
+        //_minoMovingFlag = false;
     }
 
-    Mino getMino(){
-        return this.mino;
+    boolean isLanding(){
+        return isBlocksFilled(0, -1);
     }
 }
 
@@ -308,23 +364,30 @@ class Mino{
         _rotateIndex = 0;
         switch(type){
             case IMino:
-                this.colorID = 1;
-                _buildMino(4, 
-                    new int[][][] {{{-1,0},{0,0},{1,0},{2,0}},
+                this._colorID = 1;
+                _buildMino(new int[][][]
+                    {{{-1,0},{0,0},{1,0},{2,0}},
                     {{0,-2},{0,-1},{0,0},{0,1}},
                     {{-2,0},{-1,0},{0,0},{1,0}},
                     {{0,-1},{0,0},{0,1},{0,2}}}
                 );
                 break;
             case OMino:
-                this.colorID = 2;
-                int[][][] temp2 = {{{-1,-1},{-1,0},{0,-1},{0,0}},
-                        {{-1,-1},{-1,0},{0,-1},{0,0}}};
-                _buildMino(4,temp2);
+                this._colorID = 2;
+                _buildMino(new int[][][]
+                    {{{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}}}
+                );
                 break;
             default:
                 break;
         }
+    }
+
+    void resetRotateIndex(){
+        this._rotateIndex = 0;
     }
 
     void _buildMino(int[][][] data){
@@ -347,6 +410,10 @@ class Mino{
         else _rotateIndex++;
         if (_rotateIndex < 0) _rotateIndex = 3;
         if (_rotateIndex > 3) _rotateIndex = 0;
+    }
+
+    int getColorID(){
+        return this._colorID;
     }
 }
 
