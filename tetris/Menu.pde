@@ -15,7 +15,7 @@ class SMenu extends Scene {
         addComponent(_btnStart);
         _btnRanking = new CButton(500, 50, 150, 50, "Ranking");
         addComponent(_btnRanking);
-        _btnend = new CButton(900, 50, 100, 50, "end");
+        _btnend = new CButton(900, 50, 100, 50, "End");
         addComponent(_btnend);
     }
 
@@ -23,7 +23,7 @@ class SMenu extends Scene {
     void draw(){
         super.draw();
         if (_btnStart.isClicked()){
-            // app.changeScene(new SPlay());
+            app.changeScene(new SPlay());
             println("Start pressed!");
         }
         if (_btnRanking.isClicked()){
