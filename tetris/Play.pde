@@ -1,6 +1,4 @@
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 
 class SPlay extends Scene{
     CTetrisEnv _tetrisEnv;
@@ -49,6 +47,7 @@ class TetrisCore{
     TetrisMinoGenerator _minoGenerator;
     Input _input;
     Mino _hold;
+    int _score;
 
     TetrisCore(){
         _minoGenerator  = new TetrisMinoGenerator();
@@ -80,6 +79,9 @@ class TetrisCore{
         if(_input.isKeyClicked("hardDrop")){
             _stage.hardDrop();
             _stage.placeMino();
+            if(isOverFromStage){
+                gameOver();
+            }
             _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
             _stage.minoPositionInit();
             _movingMinoTickCount = 0;
@@ -100,13 +102,25 @@ class TetrisCore{
         if(_movingMinoTickCount<=_DOWN_INTERVAL){
             if(!_stage.drop()){
                 _stage.placeMino();
+                if(isOverFromStage){
+                    gameOver();
+                }
                 _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
                 _stage.minoPositionInit();
                 _movingMinoTickCount = 0;
             }
         }
-        //ゲームオーバーの処理
-        //ちょい待ち
+
+        void gameOver(){
+            //ゲームオーバーの処理
+            //秒数も実装するの？
+            //addRanking(_score,100);
+            //app.changeScene(new SRanking());
+        }
+    }
+
+    void addScore(int deleteLine){
+        _score += 10*Math.pow(2,deleteLine-1);
     }
 
     void swap(){
@@ -177,6 +191,10 @@ class Stage{
 
     Stage(){
         super();
+    }
+
+    boolean isOverFromStage(){
+        return _stage._currentMino().y => HEIGHT;
     }
 
     void minoPositionInit(){
