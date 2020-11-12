@@ -140,6 +140,26 @@ class TetrisCore{
     int[][] getStage(){
         
     }
+    /**
+    * arrayListで実装
+    */
+    ArrayList<ArrayList<Integer>> getStage(){
+        System.out.println(_stage);
+        ArrayList<ArrayList<Integer>> tempStage = new ArrayList<ArrayList<Integer>>();
+        for(ArrayList<Integer> i:_stage){
+            ArrayList<Integer> temp = new ArrayList<Integer>();
+            for(Integer j:i){
+                temp.add(j);
+            }
+            tempStage.add(temp);
+        }
+        System.out.println(_stage);
+        for(Coordinate coordinate:_currentMino.getCurrentShape()){
+            tempStage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColorID());
+        }
+        System.out.println(_stage);
+        return new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
+    }
 }
 
 class Input{
@@ -306,6 +326,19 @@ class Stage{
         }
     }
 
+    void leftRotate(){
+        if(_rotateCheck(true)){
+            _currentMino.rotate(true);
+        }
+    }
+
+    void rightRotate(){
+        if(_rotateCheck(false)){
+            _currentMino.rotate(false);
+        }
+
+    }
+
     boolean isBlocksFilled(int x,int y){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
             if(isBlockFilled(_currentMinoPosition.x+coordinate.x + x, _currentMinoPosition.y+coordinate.y + y)){
@@ -324,7 +357,7 @@ class Stage{
 
     void placeMino(){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            _stage.get(_currentMinoPosition.x+coordinate.y).set(_currentMinoPosition.y+coordinate.y,_currentMino.getColorID());
+            _stage.get(_currentMinoPosition.x+coordinate.x).set(_currentMinoPosition.y+coordinate.y,_currentMino.getColorID());
         }
         //_minoMovingFlag = false;
     }
@@ -428,7 +461,7 @@ class Mino{
             case LMino:
                 this._colorID = 5;
                 _buildMino(new int[][][]
-                    {{{0,-1},{1,-1},{0,0},{1,0}},
+                    {{{0,-1},{1,-1},{0,0},{0,1}},
                     {{-1,-1},{-1,0},{0,0},{1,0}},
                     {{0,-1},{0,0},{0,1},{-1,1}},
                     {{-1,0},{0,0},{1,0},{1,1}}}
@@ -474,6 +507,15 @@ class Mino{
 
     Coordinate[] getCurrentShape(){
         return _shapes[_rotateIndex];
+    }
+
+    Coordinate[] getLeftRotatedShape(boolean leftRotate){
+        int temp = _rotateIndex;
+        if (leftRotate) temp--;
+        else temp++;
+        if (temp < 0) temp = 3;
+        if (temp > 3) rwmp = 0;
+        return _shapes[temp];
     }
 
     void rotate(boolean leftRotate){
