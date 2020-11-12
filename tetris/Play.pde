@@ -10,8 +10,8 @@ class SPlay extends Scene{
     @Override
     void setup(){
         super.setup();
-        _tetrisEnv = new CTetrisEnv();
-        addComponent(CTetrisEnv);
+        _tetrisEnv = new CTetrisEnv(320, 10, 640, 700);
+        addComponent(_tetrisEnv);
     }
 
     void draw(){
@@ -19,21 +19,21 @@ class SPlay extends Scene{
     }
 }
 
-    color[] MINO_COLORS = new int[7] { new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0), new color(0, 0, 0) };
+color[] MINO_COLORS = new color[7];
 
 class CTetrisEnv extends Component{
-    TetrisCore tetris;
+    TetrisCore core;
 
-    CTetrisEnv(){
-        super();
-        tetris = new TetrisCore();
+    CTetrisEnv(float x, float y, float w, float h){
+        super(x, y, w, h);
+        core = new TetrisCore(new Input());
     }
 
     @Override
     void draw(){
         super.draw();
         // ここで描画する
-        tetris.update();
+        core.update();
     }
 }
 
@@ -49,24 +49,23 @@ class TetrisCore{
     Mino _hold;
     int _score;
 
-    TetrisCore(){
+    TetrisCore(Input input){
         _minoGenerator  = new TetrisMinoGenerator();
         _stage = new Stage();
+        _input = input;
         _hold = null;
         _stage.init(_WIDTH,_HEIGHT);
     }
 
     void update(){
         //毎フレーム呼び出される
+        _input.update();
         if(_stage.getCurrentMino()==null){
             _stage.setCurrentMino(_minoGenerator.takeWaitingMino(0));
             _stage.minoPositionInit();
             this._movingMinoTickCount = 0;
         }
-        /**
-         * isKeyClicked(String);
-         * 前フレームで押されておらず、今のフレームで押されている場合true, それ以外falseを期待。
-         */
+
         if(_input.isKeyClicked("left")){
             _stage.moveLeft();
         }
@@ -110,13 +109,13 @@ class TetrisCore{
                 _movingMinoTickCount = 0;
             }
         }
+    }
 
-        void gameOver(){
-            //ゲームオーバーの処理
-            //秒数も実装するの？
-            //addRanking(_score,100);
-            //app.changeScene(new SRanking());
-        }
+    void gameOver(){
+        //ゲームオーバーの処理
+        //秒数も実装するの？
+        //addRanking(_score,100);
+        //app.changeScene(new SRanking());
     }
 
     void addScore(int deleteLine){
@@ -143,38 +142,48 @@ class TetrisCore{
     }
 }
 
-/*class Input{
-    HashMap<Character,Boolean> _states;
-    char pressedKey;
-    char[] keyset1 = {'w','d','s','a','g','h'};
+class Input{
+    HashMap<String, Character> DEFAULT_KEYBIND = new HashMap<String, Character>() {
+        {
+            put("left", 'a');
+            put("right", 'd');
+            put("drop", 's');
+            put("hardDrop", 'w');
+            put("leftRotate", 'g');
+            put("rightRotate", 'h');
+            put("hold", 'e');
+        }
+    };
+    HashMap<String, Character> _keyBind;
 
-    Input(int keySetNumber){
-        _states = new HashMap<>();
-        init(keyset1);
+    Input(){
+        _keyBind = DEFAULT_KEYBIND;
     }
-
-    void init(char[] keySet){
-        for(char key:keySet){
-            _states.put(key,false);
+    Input(HashMap<String, Character> bind){
+        if (DEFAULT_KEYBIND.size() != bind.size()){
+            println("Error: キーバインドの数が一致しません！！");
+            _keyBind = DEFAULT_KEYBIND;
+        }else{
+            _keyBind = bind;
         }
     }
 
-    boolean isKeyPressed(char key){
-        return _states.get(key);
+    /**
+     * keyNameのキーが前フレームで押されておらず、今のフレームで押されている場合true, それ以外falseを返す。
+     */
+    boolean isKeyPressed(String keyName){
+        //TODO: 未実装
+        return false;
     }
 
-    void keyStateUpdate(){
-
+    boolean isKeyClicked(String keyName){
+        return false;
     }
 
-    void keyPressed() {
-        _states.put(keyCode, true);
-    }
+    void update(){
 
-    void keyReleased() {
-        _states.put(keyCode, false);
     }
-}*/
+}
 
 class Stage{
     Coordinate DEFAULT_COORDINATE = new Coordinate(4,19);
