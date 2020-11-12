@@ -178,7 +178,7 @@ class TetrisCore{
 
 class Stage{
     Coordinate DEFAULT_COORDINATE = new Coordinate(4,19);
-    Coordinate _movingMinoCoordinate;
+    Coordinate _currentMinoPosition;
     //boolean _minoMovingFlag;
     Mino _currentMino;
     ArrayList<ArrayList<Integer>> _stage;
@@ -190,7 +190,6 @@ class Stage{
     int HIDDEN_HEIGHT = 4;
 
     Stage(){
-        super();
     }
 
     boolean isOverFromStage(){
@@ -198,7 +197,7 @@ class Stage{
     }
 
     void minoPositionInit(){
-        this._movingMinoCoordinate = DEFAULT_COORDINATE;
+        this._currentMinoPosition = DEFAULT_COORDINATE;
         this._currentMino.resetRotateIndex();
     }
 
@@ -219,7 +218,7 @@ class Stage{
     void addLine(){
         ArrayList<Integer> tempLine = new ArrayList<Integer>();
         for(int i=0;i<this.stageWidth;i++){
-            tempLine.set(i,0);
+            tempLine.add(0);
         }
         _stage.add(tempLine);
     }
@@ -272,19 +271,19 @@ class Stage{
 
     void moveLeft(){
         if(!isBlocksFilled(-1,0)){
-            _movingMinoCoordinate.x--;
+            _currentMinoPosition.x--;
         }
     }
 
     void moveRight(){
         if(!isBlocksFilled(1,0)){
-            _movingMinoCoordinate.x++;
+            _currentMinoPosition.x++;
         }
     }
 
     boolean drop(){
         if(!isBlocksFilled(0,-1)){
-            _movingMinoCoordinate.y--;
+            _currentMinoPosition.y--;
             return true;
         }
         return false;
@@ -300,7 +299,7 @@ class Stage{
 
     boolean isBlocksFilled(int x,int y){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            if(isBlockFilled(_movingMinoCoordinate.x+coordinate.x + x, _movingMinoCoordinate.y+coordinate.y + y)){
+            if(isBlockFilled(_currentMinoPosition.x+coordinate.x + x, _currentMinoPosition.y+coordinate.y + y)){
                 return true;
             }
         }
@@ -316,7 +315,7 @@ class Stage{
 
     void placeMino(){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            _stage.get(_movingMinoCoordinate.x+coordinate.y).set(_movingMinoCoordinate.y+coordinate.y,_currentMino.getColorID());
+            _stage.get(_currentMinoPosition.x+coordinate.y).set(_currentMinoPosition.y+coordinate.y,_currentMino.getColorID());
         }
         //_minoMovingFlag = false;
     }
