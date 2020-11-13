@@ -37,7 +37,7 @@ class SPlay extends Scene{
 
         if (_tetrisEnv.getIsGameOver()){
             println("Game Over!\nScore: " + _tetrisEnv.getScore());
-            // addRanking(int point, int aliveSeconds)
+            addRanking(_tetrisEnv.getScore(), _tetrisEnv.getElapsedSecs());
             app.changeScene(new SRanking(true));
         }
     }
@@ -47,6 +47,8 @@ class SPlay extends Scene{
 class CTetrisEnv extends Component{
     TetrisCore core;
     int CELL_SIZE = 30;
+    long _startTime;
+    int _elapsedSecs;
 
     CTetrisEnv(float x, float y, float w, float h, Input input){
         super(x, y, w, h);
@@ -54,10 +56,20 @@ class CTetrisEnv extends Component{
     }
 
     @Override
+    void setup(){
+        super.setup();
+        _startTime = System.currentTimeMillis();
+    }
+
+    @Override
     void draw(){
+        super.draw();
         core.update();
+        if (!core.getIsGameOver()) _elapsedSecs = (int)(Math.floor(((int)(System.currentTimeMillis() - _startTime))/1000));
 
         drawHold(_x, _y);
+        drawScore(_x, _y+CELL_SIZE*5);
+        drawTime(_x, _y+CELL_SIZE*8);
         drawStage(_x+CELL_SIZE*5, _y);
         drawNext(_x+CELL_SIZE*(5+10), _y);
     }
@@ -112,6 +124,34 @@ class CTetrisEnv extends Component{
             }
             currY += CELL_SIZE*2+(CELL_SIZE/2);
         }
+    }
+
+    void drawScore(float startX, float startY){
+        float currX = startX;
+        float currY = startY + (CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("Score:\n"+core.getScore(), currX, currY);
+    }
+
+    /** 秒数をmm:ss形式にして返す */
+    String formatTime(int seconds){
+        int minutes = seconds / 60;
+        return String.format("%02d:%02d", minutes, seconds%60);
+    }
+
+    void drawTime(float startX, float startY){
+        float currX = startX;
+        float currY = startY + (CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("Time:\n"+formatTime(_elapsedSecs), currX, currY);
+    }
+
+    int getElapsedSecs(){
+        return _elapsedSecs;
     }
 
     int getScore(){
