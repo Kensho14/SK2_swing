@@ -1,6 +1,22 @@
 import java.util.Iterator;
 import java.util.Collections;
 
+/** ２次元座標を表現するクラス */
+class Coordinate {
+    int x;
+    int y;
+
+    Coordinate(){
+        this.x = 0;
+        this.y = 0;
+    }
+    Coordinate(int x,int y){
+        this.x = x;
+        this.y = y;
+    }
+}
+
+/** プレイシーン */
 class SPlay extends Scene{
     CTetrisEnv _tetrisEnv;
 
@@ -11,133 +27,58 @@ class SPlay extends Scene{
     @Override
     void setup(){
         super.setup();
-        _tetrisEnv = new CTetrisEnv(320, 10, 640, 700);
+        _tetrisEnv = new CTetrisEnv(320, 10, 640, 700, new Input());
         addComponent(_tetrisEnv);
     }
 
     void draw(){
+        background(255,255,255);
         super.draw();
+
+        if (_tetrisEnv.getIsGameOver()){
+            println("Game Over!\nScore: " + _tetrisEnv.getScore());
+            // addRanking(int point, int aliveSeconds)
+            app.changeScene(new SRanking(true));
+        }
     }
 }
 
-
-/*public class CTetrisEnv {
-    Scanner scanner;
-    TetrisCore tetris;
-
-    CTetrisEnv() {
-        scanner = new Scanner(System.in);
-        tetris = new TetrisCore();
-    }
-
-    void draw() {
-        String temp2 = scanner.nextLine();
-        switch (temp2) {
-            case "a" -> tetris.moveLeft();
-            case "d" -> tetris.moveRight();
-            case "s" -> tetris.drop();
-            case "g" -> tetris.leftRotate();
-            case "h" -> tetris.rightRotate();
-            case "w" -> tetris.hardDrop();
-            case "e" -> tetris.hold();
-        }
-        tetris.update();
-        System.out.println(tetris._movingMinoTickCount);
-        printStage(tetris._stage.getStage());
-        System.out.println(tetris.getScore());
-    }
-    //**
-     *printDebug用メソッド。Stageの出力を行う。
-     * /
-    void printStage(ArrayList<ArrayList<Integer>> stage) {
-        for (int i = 0; i < stage.size(); i++) {
-            System.out.print(stage.size() - i + 9 + ": ");
-            for (Integer j : stage.get(stage.size() - i - 1)) {
-                System.out.print(j);
-            }
-            System.out.print("\n");
-        }
-    }
-}*/
-
-
-
-
+/** 盤面，HOLD, NEXTを描画，ゲームロジックを管理するコンポーネント */
 class CTetrisEnv extends Component{
     TetrisCore core;
     int RECT_SIZE = 30;
 
-    CTetrisEnv(float x, float y, float w, float h){
+    CTetrisEnv(float x, float y, float w, float h, Input input){
         super(x, y, w, h);
-        core = new TetrisCore();
+        core = new TetrisCore(input);
     }
 
     @Override
     void draw(){
-        // ここで描画する
-        background(255,255,255);
-        drawStage(this.core._stage.getStage());
-        rect(_x,_y,RECT_SIZE,RECT_SIZE);
-        //printStage(this.core._stage.getStage());
+        drawStage(core.getStage());
         core.update();
-
+        
     }
 
     void drawStage(ArrayList<ArrayList<Integer>> stage){
         for(int i=0;i<stage.size();i++){
             for(int j=0;j<stage.get(0).size();j++){
-                fill(255,255,255);
-                switch(stage.get(stage.size()-i-1).get(j)){
-                    case 1:
-                        fill(0,255,255);
-                        break;
-                    case 2:
-                        fill(255,255,0);
-                        break;
-                    case 3:
-                        fill(0,255,0);
-                        break;
-                    case 4:
-                        fill(255,0,0);
-                        break;
-                    case 5:
-                        fill(230,121,40);
-                        break;
-                    case 6:
-                        fill(128,0,128);
-                        break;
-                    case 7:
-                        fill(0,0,255);
-                        break;
-                }
-                rect(_x+RECT_SIZE*j,_y+RECT_SIZE*i+RECT_SIZE,RECT_SIZE,RECT_SIZE);
-                
+                int colorCode = stage.get(i).get(j);
+                fill(colorCode);
+                rect(_x+RECT_SIZE*j, _y+RECT_SIZE*i+RECT_SIZE, RECT_SIZE, RECT_SIZE);
             }
         }
     }
 
-    /*void drawStage(ArrayList<ArrayList<Integer>> stage) {
-        for (int i = 0; i < stage.size(); i++) {
-            for (Integer j : stage.get(stage.size() - i - 1)) {
-
-                fill(255,255,255);
-                rect(_x+j*RECT_SIZE,_y+RECT_SIZE+i*RECT_SIZE,RECT_SIZE,RECT_SIZE);
-            }
-        }
-    }*/
-
-    void printStage(ArrayList<ArrayList<Integer>> stage) {
-        for (int i = 0; i < stage.size(); i++) {
-            System.out.print(stage.size() - i + 9 + ": ");
-            for (Integer j : stage.get(stage.size() - i - 1)) {
-                System.out.print(j);
-            }
-            System.out.print("\n");
-        }
+    int getScore(){
+        return core.getScore();
+    }
+    boolean getIsGameOver(){
+        return core.getIsGameOver();
     }
 }
 
-public class TetrisCore {
+class TetrisCore {
     int _DOWN_INTERVAL = 60;
     Stage _stage;
     TetrisMinoGenerator _minoGenerator;
@@ -145,15 +86,18 @@ public class TetrisCore {
     int _movingMinoTickCount;
     Mino _hold;
     boolean _holdFlag;//holdをすでに使っていたらtrue
+    Input _input;
+    boolean _isGameOver;
 
-    TetrisCore(){
-
+    TetrisCore(Input input){
+        _isGameOver = false;
         _stage = new Stage();
         _minoGenerator  = new TetrisMinoGenerator();
         _stage.minoInit(_minoGenerator.takeWaitingMino(0));
         _score = 0;
         _holdFlag = false;
         _movingMinoTickCount = 0;
+        _input = input;
     }
 
     /**
@@ -167,26 +111,37 @@ public class TetrisCore {
     int getScore(){
         return this._score;
     }
+    boolean getIsGameOver(){
+        return _isGameOver;
+    }
+
+    ArrayList<ArrayList<Integer>> getStage(){
+        return _stage.getStage();
+    }
 
     /**
      * 毎フレーム走るメソッド。
      */
     void update(){
+        if (_isGameOver) return;
         _movingMinoTickCount++;
         if(_movingMinoTickCount>=_DOWN_INTERVAL){
             if(!drop()){
                 placeMino();
             }
         }
+
+        if (_input.isKeyPressed("drop", 5)) drop();
+        if (_input.isKeyPressed("left", 20)) moveLeft();
+        if (_input.isKeyPressed("right", 20)) moveRight();
+        if (_input.isKeyPressed("leftRotate", 20)) leftRotate();
+        if (_input.isKeyPressed("rightRotate", 20)) rightRotate();
+        if (_input.isKeyTyped("hardDrop")) hardDrop();
+        if (_input.isKeyTyped("hold")) hold();
     }
 
-    /**
-     * ゲームオーバーメソッド。changeSceneを行う。
-     */
     void gameOver(){
-        //changeScene()
-        System.out.println("GameOver");
-        System.exit(1);
+        _isGameOver = true;
     }
 
     void moveLeft(){
@@ -251,11 +206,70 @@ public class TetrisCore {
         this._movingMinoTickCount = 0;
     }
 }
-public class Stage {
+
+class Input{
+    HashMap<String, Character> DEFAULT_KEYBIND = new HashMap<String, Character>() {
+        {
+            put("left", 'a');
+            put("right", 'd');
+            put("drop", 's');
+            put("hardDrop", 'w');
+            put("leftRotate", 'g');
+            put("rightRotate", 'h');
+            put("hold", 'e');
+        }
+    };
+    HashMap<String, Character> _keyBind;
+    long _lastPressedAcceptFrame;
+
+    Input(){
+        _keyBind = DEFAULT_KEYBIND;
+    }
+    Input(HashMap<String, Character> bind){
+        if (DEFAULT_KEYBIND.size() != bind.size()){
+            println("Error: キーバインドの数が一致しません！！");
+            _keyBind = DEFAULT_KEYBIND;
+        }else{
+            _keyBind = bind;
+        }
+    }
+
+    /**
+     * keyNameのキーが押されているかどうか.
+     * @param keyName バインド名
+     * @param intervalFrame 指定したフレームごとにしかtrueを返さない
+     */
+    boolean isKeyPressed(String keyName, long intervalFrame){
+        if ((((Tetris)app).appElapsedFrames - _lastPressedAcceptFrame) < intervalFrame) return false;
+        if (!_keyBind.containsKey(keyName)) return false;
+        if (keyPressed && (key == _keyBind.get(keyName))){
+            _lastPressedAcceptFrame = ((Tetris)app).appElapsedFrames;
+            return true;
+        }else{
+            return false;
+        }
+    }
+    boolean isKeyPressed(String keyName){
+        return isKeyPressed(keyName, 1);
+    }
+
+    /**
+     * keyNameのキーが押して離されたか 
+     */
+    boolean isKeyTyped(String keyName){
+        if (!_keyBind.containsKey(keyName)) return false;
+        return !keyPressed && (lastReleasedKey == _keyBind.get(keyName));
+    }
+}
+
+class Stage {
     int STAGE_WIDTH = 10;
     int STAGE_HEIGHT = 20;
     int  HIDDEN_HEIGHT = 10;
-    Coordinate DEFAULT_MINO_SPAWN_COORDINATE = new Coordinate(4,19);
+    Coordinate DEFAULT_MINO_SPAWN_COORDINATE = new Coordinate(4, 19);
+    /** 何もミノがない箇所の色 */
+    int BG_COLOR = #b2b2b2;
+    /** 現在の盤面を表す２次元配列。値はRGB色。 */
     ArrayList<ArrayList<Integer>> _stage;
     Mino _currentMino;
     Coordinate _currentMinoPosition;
@@ -280,14 +294,14 @@ public class Stage {
     void addLine(){
         ArrayList<Integer> tempLine = new ArrayList<Integer>();
         for(int i=0;i<this.STAGE_WIDTH;i++){
-            tempLine.add(0);
+            tempLine.add(BG_COLOR);
         }
         _stage.add(tempLine);
     }
 
     /**
-     * ステージの情報(現在動いているミノを含めて)返すメソッド
-     * @return
+     * ステージの情報(現在動いているミノを含めて)返すメソッド. 左上が[0][0].
+     * @return ArrayList<ArrayList<Integer>> ステージ情報
      */
     ArrayList<ArrayList<Integer>> getStage(){
         ArrayList<ArrayList<Integer>> tempStage = new ArrayList<ArrayList<Integer>>();
@@ -299,9 +313,11 @@ public class Stage {
             tempStage.add(temp);
         }
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            tempStage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColorID());
+            tempStage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColor());
         }
-        return new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
+        ArrayList<ArrayList<Integer>> temp = new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
+        Collections.reverse(temp);
+        return temp;
     }
 
     /**
@@ -402,7 +418,7 @@ public class Stage {
      */
     boolean isLineFull(ArrayList<Integer> _line){
         for(Integer block:_line){
-            if(block==0){ return false; }
+            if(block == BG_COLOR){ return false; }
         }
         return true;
     }
@@ -432,7 +448,7 @@ public class Stage {
         if(x<0||y<0||x>=this.STAGE_WIDTH||y>=this.STAGE_HEIGHT+HIDDEN_HEIGHT){
             return true;
         }
-        return _stage.get(y).get(x)!=0;
+        return _stage.get(y).get(x) != BG_COLOR;
     }
 
     /**
@@ -448,11 +464,12 @@ public class Stage {
 
     void placeMino(){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            _stage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColorID());
+            _stage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColor());
         }
     }
 }
-public class TetrisMinoGenerator {
+
+class TetrisMinoGenerator {
     ArrayList<Mino> _waitingMinoList;
 
     TetrisMinoGenerator(){
@@ -496,8 +513,9 @@ enum MinoTypes {
     TMino,
     JMino
 }
-public class Mino{
-    int _colorID;
+
+class Mino{
+    int _colorCode;
     int _rotateIndex;
     Coordinate[][] _shapes;
 
@@ -505,7 +523,7 @@ public class Mino{
         _rotateIndex = 0;
         switch(type){
             case IMino:
-                this._colorID = 1;
+                this._colorCode = #00ffff;
                 _buildMino(new int[][][]
                         {{{-1,0},{0,0},{1,0},{2,0}},
                                 {{0,-2},{0,-1},{0,0},{0,1}},
@@ -514,7 +532,7 @@ public class Mino{
                 );
                 break;
             case OMino:
-                this._colorID = 2;
+                this._colorCode = #ffff00;
                 _buildMino(new int[][][]
                         {{{-1,-1},{-1,0},{0,-1},{0,0}},
                                 {{-1,-1},{-1,0},{0,-1},{0,0}},
@@ -523,7 +541,7 @@ public class Mino{
                 );
                 break;
             case SMino:
-                this._colorID = 3;
+                this._colorCode = #00ff00;
                 _buildMino(new int[][][]
                         {{{-1,0},{0,0},{0,1},{1,1}},
                                 {{1,-1},{1,0},{0,0},{0,1}},
@@ -532,7 +550,7 @@ public class Mino{
                 );
                 break;
             case ZMino:
-                this._colorID = 4;
+                this._colorCode = #ff0000;
                 _buildMino(new int[][][]
                         {{{-1,1},{0,1},{0,0},{1,0}},
                                 {{-1,-1},{-1,0},{0,0},{0,1}},
@@ -541,7 +559,7 @@ public class Mino{
                 );
                 break;
             case LMino:
-                this._colorID = 5;
+                this._colorCode = #e67928;
                 _buildMino(new int[][][]
                         {{{-1,0},{0,0},{1,0},{1,1}},
                                 {{0,-1},{1,-1},{0,0},{0,1}},
@@ -550,7 +568,7 @@ public class Mino{
                 );
                 break;
             case TMino:
-                this._colorID = 6;
+                this._colorCode = #800080;
                 _buildMino(new int[][][]
                         {{{-1,0},{0,0},{0,1},{1,0}},
                                 {{0,-1},{1,0},{0,0},{0,1}},
@@ -559,7 +577,7 @@ public class Mino{
                 );
                 break;
             case JMino:
-                this._colorID = 7;
+                this._colorCode = #0000ff;
                 _buildMino(new int[][][]
                         {{{-1,-1},{0,-1},{0,0},{0,1}},
                                 {{-1,1},{-1,0},{0,0},{1,0}},
@@ -607,15 +625,7 @@ public class Mino{
         if (_rotateIndex > 3) _rotateIndex = 0;
     }
 
-    int getColorID(){
-        return this._colorID;
-    }
-}
-public class Coordinate {
-    int x;
-    int y;
-    Coordinate(int x,int y){
-        this.x = x;
-        this.y = y;
+    int getColor(){
+        return this._colorCode;
     }
 }
