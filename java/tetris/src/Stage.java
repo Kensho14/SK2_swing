@@ -15,11 +15,18 @@ public class Stage {
         _setStageSize();
     }
 
+    /**
+     * ステージの大きさを指定するメソッド
+     */
     void _setStageSize(){
         for(int i=0;i<STAGE_HEIGHT+HIDDEN_HEIGHT;i++){
             addLine();
         }
     }
+
+    /**
+     * ステージに一行追加するメソッド。
+     */
     void addLine(){
         ArrayList<Integer> tempLine = new ArrayList<Integer>();
         for(int i=0;i<this.STAGE_WIDTH;i++){
@@ -28,6 +35,10 @@ public class Stage {
         _stage.add(tempLine);
     }
 
+    /**
+     * ステージの情報(現在動いているミノを含めて)返すメソッド
+     * @return
+     */
     ArrayList<ArrayList<Integer>> getStage(){
         ArrayList<ArrayList<Integer>> tempStage = new ArrayList<ArrayList<Integer>>();
         for(ArrayList<Integer> i:_stage){
@@ -43,6 +54,10 @@ public class Stage {
         return new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
     }
 
+    /**
+     * ミノの初期化に用いるメソッド
+     * @param mino
+     */
     void minoInit(Mino mino){
         setCurrentMino(mino);
         Coordinate position = DEFAULT_MINO_SPAWN_COORDINATE;
@@ -112,6 +127,11 @@ public class Stage {
         return true;
     }
 
+    /**
+     * 列が埋まっているかの判定をし、埋まっていたら消去するメソッド。
+     * 返り値として消したライン数を返す
+     * @return
+     */
     int checkLinesFull(){
         int fullLinesAmount = 0;
         Iterator<ArrayList<Integer>> temp = _stage.iterator();
@@ -124,6 +144,12 @@ public class Stage {
         return fullLinesAmount;
     }
 
+    /**
+     * checkLinesFullで使用。
+     * １列の埋まっているかの判断を行う。
+     * @param _line
+     * @return
+     */
     boolean isLineFull(ArrayList<Integer> _line){
         for(Integer block:_line){
             if(block==0){ return false; }
@@ -131,6 +157,12 @@ public class Stage {
         return true;
     }
 
+    /**
+     * 現在のミノの座標からx,yの補正をかけた位置が埋まっているかを判別するメソッド
+     * @param x
+     * @param y
+     * @return
+     */
     boolean isBlocksFilled(int x,int y){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
             if(isBlockFilled(_currentMinoPosition.x+coordinate.x + x, _currentMinoPosition.y+coordinate.y + y)){
@@ -140,6 +172,12 @@ public class Stage {
         return false;
     }
 
+    /**
+     * x,yで示した座標がステージ外や既にブロックがあるかの判定を行う。
+     * @param x
+     * @param y
+     * @return
+     */
     boolean isBlockFilled(int x,int y){
         if(x<0||y<0||x>=this.STAGE_WIDTH||y>=this.STAGE_HEIGHT+HIDDEN_HEIGHT){
             return true;
@@ -147,6 +185,11 @@ public class Stage {
         return _stage.get(y).get(x)!=0;
     }
 
+    /**
+     * ステージから溢れていないかの判断をするメソッド
+     * gameoverで使用
+     * @return
+     */
     boolean isOverFromStage(){
         int x = DEFAULT_MINO_SPAWN_COORDINATE.x;
         int y = DEFAULT_MINO_SPAWN_COORDINATE.y;

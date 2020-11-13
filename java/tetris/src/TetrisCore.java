@@ -17,6 +17,10 @@ public class TetrisCore {
         _movingMinoTickCount = 0;
     }
 
+    /**
+     * スコアを追加するメソッド。消した列の数を引数にとる。
+     * @param deleteLine
+     */
     void addScore(int deleteLine){
         if(deleteLine>=1) _score += 10*Math.pow(2,deleteLine-1);
     }
@@ -25,6 +29,9 @@ public class TetrisCore {
         return this._score;
     }
 
+    /**
+     * 毎フレーム走るメソッド。
+     */
     void update(){
         _movingMinoTickCount++;
         if(_movingMinoTickCount>=_DOWN_INTERVAL){
@@ -34,6 +41,9 @@ public class TetrisCore {
         }
     }
 
+    /**
+     * ゲームオーバーメソッド。changeSceneを行う。
+     */
     void gameOver(){
         //changeScene()
         System.out.println("GameOver");
@@ -64,6 +74,10 @@ public class TetrisCore {
         _stage.leftRotate();
     }
 
+    /**
+     * 単純に今のミノとホールドを入れ替える。
+     * その他の処理もholdには必要なためhold()から呼び出される。
+     */
     void _swap(){
         if(_hold==null){
             _hold = _stage.getCurrentMino();
@@ -75,6 +89,9 @@ public class TetrisCore {
         }
     }
 
+    /**
+     * ホールドを行うときに呼び出すメソッド。
+     */
     void hold(){
         if(!_holdFlag){
             _swap();
@@ -82,6 +99,10 @@ public class TetrisCore {
         }
     }
 
+    /**
+     * ミノを設置するメソッド。
+     * 次のミノの準備等もここで行う。基本このメソッドで次のミノの準備まで行う。
+     */
     void placeMino(){
         _stage.placeMino();
         _holdFlag = false;

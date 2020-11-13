@@ -23,15 +23,12 @@ public class CTetrisEnv {
         }
         tetris.update();
         System.out.println(tetris._movingMinoTickCount);
-        /*if (temp % 3 == 0) {
-            if (!tetris._stage.drop()) {
-                tetris.placeMino();
-            }
-        }*/
         printStage(tetris._stage.getStage());
         System.out.println(tetris.getScore());
     }
-
+    /**
+    *printDebug用メソッド。Stageの出力を行う。
+     */
     void printStage(ArrayList<ArrayList<Integer>> stage) {
         for (int i = 0; i < stage.size(); i++) {
             System.out.print(stage.size() - i + 9 + ": ");
