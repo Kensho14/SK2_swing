@@ -27,7 +27,7 @@ class SPlay extends Scene{
     @Override
     void setup(){
         super.setup();
-        _tetrisEnv = new CTetrisEnv(320, 10, 640, 700, new Input());
+        _tetrisEnv = new CTetrisEnv(340, 50, 600, 700, new Input());
         addComponent(_tetrisEnv);
     }
 
@@ -46,7 +46,7 @@ class SPlay extends Scene{
 /** 盤面，HOLD, NEXTを描画，ゲームロジックを管理するコンポーネント */
 class CTetrisEnv extends Component{
     TetrisCore core;
-    int RECT_SIZE = 30;
+    int CELL_SIZE = 30;
 
     CTetrisEnv(float x, float y, float w, float h, Input input){
         super(x, y, w, h);
@@ -55,18 +55,62 @@ class CTetrisEnv extends Component{
 
     @Override
     void draw(){
-        drawStage(core.getStage());
         core.update();
-        
+
+        drawHold(_x, _y);
+        drawStage(_x+CELL_SIZE*5, _y);
+        drawNext(_x+CELL_SIZE*(5+10), _y);
     }
 
-    void drawStage(ArrayList<ArrayList<Integer>> stage){
-        for(int i=0;i<stage.size();i++){
-            for(int j=0;j<stage.get(0).size();j++){
+    // width : 10*CELL_SIZE
+    void drawStage(float startX, float startY){
+        ArrayList<ArrayList<Integer>> stage = core.getStage();
+        for(int i=0; i<stage.size(); i++){
+            for(int j=0; j<stage.get(0).size(); j++){
                 int colorCode = stage.get(i).get(j);
                 fill(colorCode);
-                rect(_x+RECT_SIZE*j, _y+RECT_SIZE*i+RECT_SIZE, RECT_SIZE, RECT_SIZE);
+                rect(startX+CELL_SIZE*j, startY+CELL_SIZE*i, CELL_SIZE, CELL_SIZE);
             }
+        }
+    }
+
+    // width : 5*CELL_SIZE
+    void drawHold(float startX, float startY){
+        float currX = startX + (CELL_SIZE/2);
+        float currY = startY + (CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("HOLD", currX, currY);
+        currY += CELL_SIZE + (CELL_SIZE/2);
+        int[][] displayA2 = core.getHoldMino().getDisplayArray2();
+        fill(core.getHoldMino().getColor());
+        for (int i=0; i<4; i++){
+            for (int j=0; j<2; j++){
+                if (displayA2[i][j] == 1) rect(currX+CELL_SIZE*i, currY+CELL_SIZE*j, CELL_SIZE, CELL_SIZE);
+            }
+        }
+    }
+
+    // width : 5*CELL_SIZE
+    void drawNext(float startX, float startY){
+        float currX = startX+(CELL_SIZE/2);
+        float currY = startY+(CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("NEXT", currX, currY);
+        currY += CELL_SIZE + (CELL_SIZE/2);
+        Mino[] queue = core.getQueuedMino(4);
+        for (Mino mino : queue){
+            int[][] displayA2 = mino.getDisplayArray2();
+            fill(mino.getColor());
+            for (int i=0; i<4; i++){
+                for (int j=0; j<2; j++){
+                    if (displayA2[i][j] == 1) rect(currX+CELL_SIZE*i, currY+CELL_SIZE*j, CELL_SIZE, CELL_SIZE);
+                }
+            }
+            currY += CELL_SIZE*2+(CELL_SIZE/2);
         }
     }
 
@@ -98,6 +142,7 @@ class TetrisCore {
         _holdFlag = false;
         _movingMinoTickCount = 0;
         _input = input;
+        _hold = new Mino(MinoTypes.Empty);
     }
 
     /**
@@ -117,6 +162,18 @@ class TetrisCore {
 
     ArrayList<ArrayList<Integer>> getStage(){
         return _stage.getStage();
+    }
+
+    Mino getHoldMino(){
+        return _hold;
+    }
+
+    Mino[] getQueuedMino(int count){
+        ArrayList<Mino> queue = new ArrayList<Mino>();
+        for (int i=0; i<count; i++){
+            queue.add(_minoGenerator.getWaitingMino(i));
+        }
+        return queue.toArray(new Mino[]{});
     }
 
     /**
@@ -173,7 +230,7 @@ class TetrisCore {
      * その他の処理もholdには必要なためhold()から呼び出される。
      */
     void _swap(){
-        if(_hold==null){
+        if(_hold == null || _hold.getType() == MinoTypes.Empty){
             _hold = _stage.getCurrentMino();
             _stage.minoInit(_minoGenerator.takeWaitingMino(0));
         } else{
@@ -505,6 +562,7 @@ class TetrisMinoGenerator {
 }
 
 enum MinoTypes {
+    Empty,
     IMino,
     OMino,
     SMino,
@@ -515,86 +573,124 @@ enum MinoTypes {
 }
 
 class Mino{
+    MinoTypes _type;
     int _colorCode;
     int _rotateIndex;
     Coordinate[][] _shapes;
+    int[][] _displayArray2;
 
     Mino(MinoTypes type) {
         _rotateIndex = 0;
+        _type = type;
+        int[][][] shapeData;
+        int[][] displayShapeData;
         switch(type){
             case IMino:
                 this._colorCode = #00ffff;
-                _buildMino(new int[][][]
-                        {{{-1,0},{0,0},{1,0},{2,0}},
-                                {{0,-2},{0,-1},{0,0},{0,1}},
-                                {{-2,0},{-1,0},{0,0},{1,0}},
-                                {{0,-1},{0,0},{0,1},{0,2}}}
-                );
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{1,0},{2,0}},
+                    {{0,-2},{0,-1},{0,0},{0,1}},
+                    {{-2,0},{-1,0},{0,0},{1,0}},
+                    {{0,-1},{0,0},{0,1},{0,2}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 1}, {1, 1}, {2, 1}, {3, 1}
+                };
                 break;
             case OMino:
                 this._colorCode = #ffff00;
-                _buildMino(new int[][][]
-                        {{{-1,-1},{-1,0},{0,-1},{0,0}},
-                                {{-1,-1},{-1,0},{0,-1},{0,0}},
-                                {{-1,-1},{-1,0},{0,-1},{0,0}},
-                                {{-1,-1},{-1,0},{0,-1},{0,0}}}
-                );
+                shapeData = new int[][][]{
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {2, 0}, {1, 1}, {2, 1}
+                };
                 break;
             case SMino:
                 this._colorCode = #00ff00;
-                _buildMino(new int[][][]
-                        {{{-1,0},{0,0},{0,1},{1,1}},
-                                {{1,-1},{1,0},{0,0},{0,1}},
-                                {{-1,0},{0,0},{0,1},{1,1}},
-                                {{1,-1},{1,0},{0,0},{0,1}}}
-                );
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{0,1},{1,1}},
+                    {{1,-1},{1,0},{0,0},{0,1}},
+                    {{-1,0},{0,0},{0,1},{1,1}},
+                    {{1,-1},{1,0},{0,0},{0,1}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {2, 0}, {0, 1}, {1, 1}
+                };
                 break;
             case ZMino:
                 this._colorCode = #ff0000;
-                _buildMino(new int[][][]
-                        {{{-1,1},{0,1},{0,0},{1,0}},
-                                {{-1,-1},{-1,0},{0,0},{0,1}},
-                                {{-1,1},{0,1},{0,0},{1,0}},
-                                {{-1,-1},{-1,0},{0,0},{0,1}}}
-                );
-                break;
-            case LMino:
-                this._colorCode = #e67928;
-                _buildMino(new int[][][]
-                        {{{-1,0},{0,0},{1,0},{1,1}},
-                                {{0,-1},{1,-1},{0,0},{0,1}},
-                                {{-1,-1},{-1,0},{0,0},{1,0}},
-                                {{0,-1},{0,0},{0,1},{-1,1}}}
-                );
-                break;
-            case TMino:
-                this._colorCode = #800080;
-                _buildMino(new int[][][]
-                        {{{-1,0},{0,0},{0,1},{1,0}},
-                                {{0,-1},{1,0},{0,0},{0,1}},
-                                {{-1,0},{0,0},{0,1},{1,0}},
-                                {{0,-1},{0,0},{0,1},{-1,0}}}
-                );
+                shapeData = new int[][][]{
+                    {{-1,1},{0,1},{0,0},{1,0}},
+                    {{-1,-1},{-1,0},{0,0},{0,1}},
+                    {{-1,1},{0,1},{0,0},{1,0}},
+                    {{-1,-1},{-1,0},{0,0},{0,1}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 0}, {1, 0}, {1, 1}, {2, 1}
+                };
                 break;
             case JMino:
                 this._colorCode = #0000ff;
-                _buildMino(new int[][][]
-                        {{{-1,-1},{0,-1},{0,0},{0,1}},
-                                {{-1,1},{-1,0},{0,0},{1,0}},
-                                {{0,-1},{0,0},{0,1},{1,1}},
-                                {{1,-1},{-1,0},{0,0},{1,0}}}
-                );
+                shapeData = new int[][][]{
+                    {{-1,-1},{0,-1},{0,0},{0,1}},
+                    {{-1,1},{-1,0},{0,0},{1,0}},
+                    {{0,-1},{0,0},{0,1},{1,1}},
+                    {{1,-1},{-1,0},{0,0},{1,0}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+                break;
+            case LMino:
+                this._colorCode = #e67928;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{1,0},{1,1}},
+                    {{0,-1},{1,-1},{0,0},{0,1}},
+                    {{-1,-1},{-1,0},{0,0},{1,0}},
+                    {{0,-1},{0,0},{0,1},{-1,1}}
+                };
+                displayShapeData = new int[][]{
+                    {2, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+                break;
+            case TMino:
+                this._colorCode = #800080;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{0,1},{1,0}},
+                    {{0,-1},{1,0},{0,0},{0,1}},
+                    {{-1,0},{0,0},{0,1},{1,0}},
+                    {{0,-1},{0,0},{0,1},{-1,0}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
                 break;
             default:
+                _colorCode = 0;
+                shapeData = new int[][][]{};
+                displayShapeData = new int[][]{};
                 break;
         }
+        _buildMino(shapeData, displayShapeData);
+    }
+
+    MinoTypes getType(){
+        return _type;
     }
 
     void resetRotateIndex(){
         this._rotateIndex = 0;
     }
 
-    void _buildMino(int[][][] data){
+    void _buildMino(int[][][] data, int[][] displayData){
+        _displayArray2 = new int[][]{{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+        _shapes = new Coordinate[][]{};
+        if (_type == MinoTypes.Empty) return;
+
         int blockSize = data[0].length;
         Coordinate[][] shapes = new Coordinate[4][blockSize];
         for(int i=0; i<4; i++){
@@ -603,13 +699,26 @@ class Mino{
             }
         }
         this._shapes = shapes;
+
+        for (int i=0; i<4; i++){
+            int[] temp = displayData[i];
+            _displayArray2[temp[0]][temp[1]] = 1;
+        }
     }
 
+    /** 現在の回転された形状を返す */
     Coordinate[] getCurrentShape(){
+        if (_type == MinoTypes.Empty) return new Coordinate[]{};
         return _shapes[_rotateIndex];
     }
 
+    /** HOLDやNEXTの表示用２次元配列を返す。左上を(0, 0)とした4*2の空間。ブロックがある箇所は1, 何もない箇所は0。 */
+    int[][] getDisplayArray2(){
+        return _displayArray2;
+    }
+
     Coordinate[] getLeftRotatedShape(boolean leftRotate){
+        if (_type == MinoTypes.Empty) return new Coordinate[]{};
         int temp = _rotateIndex;
         if (leftRotate) temp--;
         else temp++;
