@@ -362,7 +362,7 @@ class Input{
 class Stage {
     int STAGE_WIDTH = 10;
     int STAGE_HEIGHT = 20;
-    int  HIDDEN_HEIGHT = 10;
+    int  HIDDEN_HEIGHT = 4;
     Coordinate DEFAULT_MINO_SPAWN_COORDINATE = new Coordinate(4, 19);
     /** 何もミノがない箇所の色 */
     int BG_COLOR = #b2b2b2;
@@ -380,20 +380,20 @@ class Stage {
      * ステージの大きさを指定するメソッド
      */
     void _setStageSize(){
-        for(int i=0;i<STAGE_HEIGHT+HIDDEN_HEIGHT;i++){
-            addLine();
-        }
+        addLine(STAGE_HEIGHT+HIDDEN_HEIGHT);
     }
 
     /**
      * ステージに一行追加するメソッド。
      */
-    void addLine(){
-        ArrayList<Integer> tempLine = new ArrayList<Integer>();
-        for(int i=0;i<this.STAGE_WIDTH;i++){
-            tempLine.add(BG_COLOR);
+    void addLine(int lineAmount){
+        for(int j=0;j<lineAmount;j++){
+            ArrayList<Integer> tempLine = new ArrayList<Integer>();
+            for(int i=0;i<this.STAGE_WIDTH;i++){
+                tempLine.add(BG_COLOR);
+            }
+            _stage.add(tempLine);
         }
-        _stage.add(tempLine);
     }
 
     /**
@@ -410,11 +410,6 @@ class Stage {
             tempStage.add(temp);
         }
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            if(_currentMinoPosition.y+coordinate.y==20){
-                System.out.println(_currentMinoPosition.y+coordinate.y);
-                System.out.println(_currentMinoPosition.x+coordinate.x);
-                System.out.println();
-            }
             tempStage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColor());
         }
         ArrayList<ArrayList<Integer>> temp = new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
@@ -509,6 +504,7 @@ class Stage {
                 fullLinesAmount++;
             }
         }
+        addLine(fullLinesAmount);
         return fullLinesAmount;
     }
 
