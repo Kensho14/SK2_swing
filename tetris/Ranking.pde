@@ -131,11 +131,12 @@ class SRanking extends Scene {
         background(211, 211, 211);
         super.draw();
         if (_retryBtn.isClicked()){
-            // app.changeScene(new SPlay());
+            app.changeScene(new SPlay());
             println("changeScene Play Scene.");
         }
         if (_menuBtn.isClicked()){
             app.changeScene(new SMenu());
+            println("changeScene Menu Scene.");
         }
     }
 }

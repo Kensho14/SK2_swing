@@ -1,6 +1,22 @@
 import java.util.Iterator;
 import java.util.Collections;
 
+/** ２次元座標を表現するクラス */
+class Coordinate {
+    int x;
+    int y;
+
+    Coordinate(){
+        this.x = 0;
+        this.y = 0;
+    }
+    Coordinate(int x,int y){
+        this.x = x;
+        this.y = y;
+    }
+}
+
+/** プレイシーン */
 class SPlay extends Scene{
     CTetrisEnv _tetrisEnv;
 
@@ -11,15 +27,23 @@ class SPlay extends Scene{
     @Override
     void setup(){
         super.setup();
-        _tetrisEnv = new CTetrisEnv(320, 10, 640, 700);
+        _tetrisEnv = new CTetrisEnv(340, 50, 600, 700, new Input());
         addComponent(_tetrisEnv);
     }
 
     void draw(){
+        background(255,255,255);
         super.draw();
+
+        if (_tetrisEnv.getIsGameOver()){
+            println("Game Over!\nScore: " + _tetrisEnv.getScore());
+            addRanking(_tetrisEnv.getScore(), _tetrisEnv.getElapsedSecs());
+            app.changeScene(new SRanking(true));
+        }
     }
 }
 
+<<<<<<< HEAD
 
 /*public class CTetrisEnv {
     Scanner scanner;
@@ -66,14 +90,33 @@ class SPlay extends Scene{
 class CTetrisEnv extends Component{
     TetrisCore core;
     int RECT_SIZE = 30;
+=======
+/** 盤面，HOLD, NEXTを描画，ゲームロジックを管理するコンポーネント */
+class CTetrisEnv extends Component{
+    TetrisCore core;
+    int CELL_SIZE = 30;
+    long _startTime;
+    int _elapsedSecs;
+>>>>>>> develop-kensho
 
-    CTetrisEnv(float x, float y, float w, float h){
+    CTetrisEnv(float x, float y, float w, float h, Input input){
         super(x, y, w, h);
+<<<<<<< HEAD
         core = new TetrisCore();
+=======
+        core = new TetrisCore(input);
+    }
+
+    @Override
+    void setup(){
+        super.setup();
+        _startTime = System.currentTimeMillis();
+>>>>>>> develop-kensho
     }
 
     @Override
     void draw(){
+<<<<<<< HEAD
         // ここで描画する
         background(255,255,255);
         drawStage(this.core._stage.getStage());
@@ -112,10 +155,32 @@ class CTetrisEnv extends Component{
                 }
                 rect(_x+RECT_SIZE*j,_y+RECT_SIZE*i+RECT_SIZE,RECT_SIZE,RECT_SIZE);
                 
+=======
+        super.draw();
+        core.update();
+        if (!core.getIsGameOver()) _elapsedSecs = (int)(Math.floor(((int)(System.currentTimeMillis() - _startTime))/1000));
+
+        drawHold(_x, _y);
+        drawScore(_x, _y+CELL_SIZE*5);
+        drawTime(_x, _y+CELL_SIZE*8);
+        drawStage(_x+CELL_SIZE*5, _y);
+        drawNext(_x+CELL_SIZE*(5+10), _y);
+    }
+
+    // width : 10*CELL_SIZE
+    void drawStage(float startX, float startY){
+        ArrayList<ArrayList<Integer>> stage = core.getStage();
+        for(int i=0; i<stage.size(); i++){
+            for(int j=0; j<stage.get(0).size(); j++){
+                int colorCode = stage.get(i).get(j);
+                fill(colorCode);
+                rect(startX+CELL_SIZE*j, startY+CELL_SIZE*i, CELL_SIZE, CELL_SIZE);
+>>>>>>> develop-kensho
             }
         }
     }
 
+<<<<<<< HEAD
     /*void drawStage(ArrayList<ArrayList<Integer>> stage) {
         for (int i = 0; i < stage.size(); i++) {
             for (Integer j : stage.get(stage.size() - i - 1)) {
@@ -138,6 +203,85 @@ class CTetrisEnv extends Component{
 }
 
 public class TetrisCore {
+=======
+    // width : 5*CELL_SIZE
+    void drawHold(float startX, float startY){
+        float currX = startX + (CELL_SIZE/2);
+        float currY = startY + (CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("HOLD", currX, currY);
+        currY += CELL_SIZE + (CELL_SIZE/2);
+        int[][] displayA2 = core.getHoldMino().getDisplayArray2();
+        fill(core.getHoldMino().getColor());
+        for (int i=0; i<4; i++){
+            for (int j=0; j<2; j++){
+                if (displayA2[i][j] == 1) rect(currX+CELL_SIZE*i, currY+CELL_SIZE*j, CELL_SIZE, CELL_SIZE);
+            }
+        }
+    }
+
+    // width : 5*CELL_SIZE
+    void drawNext(float startX, float startY){
+        float currX = startX+(CELL_SIZE/2);
+        float currY = startY+(CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("NEXT", currX, currY);
+        currY += CELL_SIZE + (CELL_SIZE/2);
+        Mino[] queue = core.getQueuedMino(4);
+        for (Mino mino : queue){
+            int[][] displayA2 = mino.getDisplayArray2();
+            fill(mino.getColor());
+            for (int i=0; i<4; i++){
+                for (int j=0; j<2; j++){
+                    if (displayA2[i][j] == 1) rect(currX+CELL_SIZE*i, currY+CELL_SIZE*j, CELL_SIZE, CELL_SIZE);
+                }
+            }
+            currY += CELL_SIZE*2+(CELL_SIZE/2);
+        }
+    }
+
+    void drawScore(float startX, float startY){
+        float currX = startX;
+        float currY = startY + (CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("Score:\n"+core.getScore(), currX, currY);
+    }
+
+    /** 秒数をmm:ss形式にして返す */
+    String formatTime(int seconds){
+        int minutes = seconds / 60;
+        return String.format("%02d:%02d", minutes, seconds%60);
+    }
+
+    void drawTime(float startX, float startY){
+        float currX = startX;
+        float currY = startY + (CELL_SIZE/2);
+        fill(#000000);
+        textAlign(LEFT, CENTER);
+        textSize(CELL_SIZE-5);
+        text("Time:\n"+formatTime(_elapsedSecs), currX, currY);
+    }
+
+    int getElapsedSecs(){
+        return _elapsedSecs;
+    }
+
+    int getScore(){
+        return core.getScore();
+    }
+    boolean getIsGameOver(){
+        return core.getIsGameOver();
+    }
+}
+
+class TetrisCore {
+>>>>>>> develop-kensho
     int _DOWN_INTERVAL = 60;
     Stage _stage;
     TetrisMinoGenerator _minoGenerator;
@@ -145,15 +289,28 @@ public class TetrisCore {
     int _movingMinoTickCount;
     Mino _hold;
     boolean _holdFlag;//holdをすでに使っていたらtrue
+<<<<<<< HEAD
 
     TetrisCore(){
 
+=======
+    Input _input;
+    boolean _isGameOver;
+
+    TetrisCore(Input input){
+        _isGameOver = false;
+>>>>>>> develop-kensho
         _stage = new Stage();
         _minoGenerator  = new TetrisMinoGenerator();
         _stage.minoInit(_minoGenerator.takeWaitingMino(0));
         _score = 0;
         _holdFlag = false;
         _movingMinoTickCount = 0;
+<<<<<<< HEAD
+=======
+        _input = input;
+        _hold = new Mino(MinoTypes.Empty);
+>>>>>>> develop-kensho
     }
 
     /**
@@ -167,26 +324,64 @@ public class TetrisCore {
     int getScore(){
         return this._score;
     }
+<<<<<<< HEAD
+=======
+    boolean getIsGameOver(){
+        return _isGameOver;
+    }
+
+    ArrayList<ArrayList<Integer>> getStage(){
+        return _stage.getStage();
+    }
+
+    Mino getHoldMino(){
+        return _hold;
+    }
+
+    Mino[] getQueuedMino(int count){
+        ArrayList<Mino> queue = new ArrayList<Mino>();
+        for (int i=0; i<count; i++){
+            queue.add(_minoGenerator.getWaitingMino(i));
+        }
+        return queue.toArray(new Mino[]{});
+    }
+>>>>>>> develop-kensho
 
     /**
      * 毎フレーム走るメソッド。
      */
     void update(){
+<<<<<<< HEAD
+=======
+        if (_isGameOver) return;
+>>>>>>> develop-kensho
         _movingMinoTickCount++;
         if(_movingMinoTickCount>=_DOWN_INTERVAL){
             if(!drop()){
                 placeMino();
             }
         }
+
+        if (_input.isKeyPressed("drop", 5)) drop();
+        if (_input.isKeyPressed("left", 20)) moveLeft();
+        if (_input.isKeyPressed("right", 20)) moveRight();
+        if (_input.isKeyPressed("leftRotate", 20)) leftRotate();
+        if (_input.isKeyPressed("rightRotate", 20)) rightRotate();
+        if (_input.isKeyTyped("hardDrop")) hardDrop();
+        if (_input.isKeyTyped("hold")) hold();
     }
 
     /**
      * ゲームオーバーメソッド。changeSceneを行う。
      */
     void gameOver(){
+<<<<<<< HEAD
         //changeScene()
         System.out.println("GameOver");
         System.exit(1);
+=======
+        _isGameOver = true;
+>>>>>>> develop-kensho
     }
 
     void moveLeft(){
@@ -218,7 +413,11 @@ public class TetrisCore {
      * その他の処理もholdには必要なためhold()から呼び出される。
      */
     void _swap(){
+<<<<<<< HEAD
         if(_hold==null){
+=======
+        if(_hold == null || _hold.getType() == MinoTypes.Empty){
+>>>>>>> develop-kensho
             _hold = _stage.getCurrentMino();
             _stage.minoInit(_minoGenerator.takeWaitingMino(0));
         } else{
@@ -235,10 +434,55 @@ public class TetrisCore {
         if(!_holdFlag){
             _swap();
             this._holdFlag = true;
+<<<<<<< HEAD
+=======
         }
     }
 
     /**
+     * ミノを設置するメソッド。
+     * 次のミノの準備等もここで行う。基本このメソッドで次のミノの準備まで行う。
+     */
+    void placeMino(){
+        _stage.placeMino();
+        _holdFlag = false;
+        if (this._stage.isOverFromStage()) gameOver();
+        this.addScore(this._stage.checkLinesFull());
+        this._stage.minoInit(this._minoGenerator.takeWaitingMino(0));
+        this._movingMinoTickCount = 0;
+    }
+}
+
+class Input{
+    HashMap<String, Character> DEFAULT_KEYBIND = new HashMap<String, Character>() {
+        {
+            put("left", 'a');
+            put("right", 'd');
+            put("drop", 's');
+            put("hardDrop", 'w');
+            put("leftRotate", 'g');
+            put("rightRotate", 'h');
+            put("hold", 'e');
+        }
+    };
+    HashMap<String, Character> _keyBind;
+    long _lastPressedAcceptFrame;
+
+    Input(){
+        _keyBind = DEFAULT_KEYBIND;
+    }
+    Input(HashMap<String, Character> bind){
+        if (DEFAULT_KEYBIND.size() != bind.size()){
+            println("Error: キーバインドの数が一致しません！！");
+            _keyBind = DEFAULT_KEYBIND;
+        }else{
+            _keyBind = bind;
+>>>>>>> develop-kensho
+        }
+    }
+
+    /**
+<<<<<<< HEAD
      * ミノを設置するメソッド。
      * 次のミノの準備等もここで行う。基本このメソッドで次のミノの準備まで行う。
      */
@@ -256,6 +500,43 @@ public class Stage {
     int STAGE_HEIGHT = 20;
     int  HIDDEN_HEIGHT = 10;
     Coordinate DEFAULT_MINO_SPAWN_COORDINATE = new Coordinate(4,19);
+=======
+     * keyNameのキーが押されているかどうか.
+     * @param keyName バインド名
+     * @param intervalFrame 指定したフレームごとにしかtrueを返さない
+     */
+    boolean isKeyPressed(String keyName, long intervalFrame){
+        if ((((Tetris)app).appElapsedFrames - _lastPressedAcceptFrame) < intervalFrame) return false;
+        if (!_keyBind.containsKey(keyName)) return false;
+        if (keyPressed && (key == _keyBind.get(keyName))){
+            _lastPressedAcceptFrame = ((Tetris)app).appElapsedFrames;
+            return true;
+        }else{
+            return false;
+        }
+    }
+    boolean isKeyPressed(String keyName){
+        return isKeyPressed(keyName, 1);
+    }
+
+    /**
+     * keyNameのキーが押して離されたか 
+     */
+    boolean isKeyTyped(String keyName){
+        if (!_keyBind.containsKey(keyName)) return false;
+        return !keyPressed && (lastReleasedKey == _keyBind.get(keyName));
+    }
+}
+
+class Stage {
+    int STAGE_WIDTH = 10;
+    int STAGE_HEIGHT = 20;
+    int  HIDDEN_HEIGHT = 10;
+    Coordinate DEFAULT_MINO_SPAWN_COORDINATE = new Coordinate(4, 19);
+    /** 何もミノがない箇所の色 */
+    int BG_COLOR = #b2b2b2;
+    /** 現在の盤面を表す２次元配列。値はRGB色。 */
+>>>>>>> develop-kensho
     ArrayList<ArrayList<Integer>> _stage;
     Mino _currentMino;
     Coordinate _currentMinoPosition;
@@ -280,14 +561,23 @@ public class Stage {
     void addLine(){
         ArrayList<Integer> tempLine = new ArrayList<Integer>();
         for(int i=0;i<this.STAGE_WIDTH;i++){
+<<<<<<< HEAD
             tempLine.add(0);
+=======
+            tempLine.add(BG_COLOR);
+>>>>>>> develop-kensho
         }
         _stage.add(tempLine);
     }
 
     /**
+<<<<<<< HEAD
      * ステージの情報(現在動いているミノを含めて)返すメソッド
      * @return
+=======
+     * ステージの情報(現在動いているミノを含めて)返すメソッド. 左上が[0][0].
+     * @return ArrayList<ArrayList<Integer>> ステージ情報
+>>>>>>> develop-kensho
      */
     ArrayList<ArrayList<Integer>> getStage(){
         ArrayList<ArrayList<Integer>> tempStage = new ArrayList<ArrayList<Integer>>();
@@ -299,9 +589,17 @@ public class Stage {
             tempStage.add(temp);
         }
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
+<<<<<<< HEAD
             tempStage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColorID());
         }
         return new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
+=======
+            tempStage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColor());
+        }
+        ArrayList<ArrayList<Integer>> temp = new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
+        Collections.reverse(temp);
+        return temp;
+>>>>>>> develop-kensho
     }
 
     /**
@@ -402,7 +700,11 @@ public class Stage {
      */
     boolean isLineFull(ArrayList<Integer> _line){
         for(Integer block:_line){
+<<<<<<< HEAD
             if(block==0){ return false; }
+=======
+            if(block == BG_COLOR){ return false; }
+>>>>>>> develop-kensho
         }
         return true;
     }
@@ -432,7 +734,18 @@ public class Stage {
         if(x<0||y<0||x>=this.STAGE_WIDTH||y>=this.STAGE_HEIGHT+HIDDEN_HEIGHT){
             return true;
         }
-        return _stage.get(y).get(x)!=0;
+        return _stage.get(y).get(x) != BG_COLOR;
+    }
+
+    /**
+     * ステージから溢れていないかの判断をするメソッド
+     * gameoverで使用
+     * @return
+     */
+    boolean isOverFromStage(){
+        int x = DEFAULT_MINO_SPAWN_COORDINATE.x;
+        int y = DEFAULT_MINO_SPAWN_COORDINATE.y;
+        return isBlockFilled(x-1,y)||isBlockFilled(x,y)||isBlockFilled(x+1,y)||isBlockFilled(x+2,y);
     }
 
     /**
@@ -448,11 +761,16 @@ public class Stage {
 
     void placeMino(){
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
-            _stage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColorID());
+            _stage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColor());
         }
     }
 }
+<<<<<<< HEAD
 public class TetrisMinoGenerator {
+=======
+
+class TetrisMinoGenerator {
+>>>>>>> develop-kensho
     ArrayList<Mino> _waitingMinoList;
 
     TetrisMinoGenerator(){
@@ -488,6 +806,10 @@ public class TetrisMinoGenerator {
 }
 
 enum MinoTypes {
+<<<<<<< HEAD
+=======
+    Empty,
+>>>>>>> develop-kensho
     IMino,
     OMino,
     SMino,
@@ -496,15 +818,29 @@ enum MinoTypes {
     TMino,
     JMino
 }
+<<<<<<< HEAD
 public class Mino{
     int _colorID;
     int _rotateIndex;
     Coordinate[][] _shapes;
+=======
+
+class Mino{
+    MinoTypes _type;
+    int _colorCode;
+    int _rotateIndex;
+    Coordinate[][] _shapes;
+    int[][] _displayArray2;
+>>>>>>> develop-kensho
 
     Mino(MinoTypes type) {
         _rotateIndex = 0;
+        _type = type;
+        int[][][] shapeData;
+        int[][] displayShapeData;
         switch(type){
             case IMino:
+<<<<<<< HEAD
                 this._colorID = 1;
                 _buildMino(new int[][][]
                         {{{-1,0},{0,0},{1,0},{2,0}},
@@ -566,17 +902,113 @@ public class Mino{
                                 {{0,-1},{0,0},{0,1},{1,1}},
                                 {{1,-1},{-1,0},{0,0},{1,0}}}
                 );
+=======
+                this._colorCode = #00ffff;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{1,0},{2,0}},
+                    {{0,-2},{0,-1},{0,0},{0,1}},
+                    {{-2,0},{-1,0},{0,0},{1,0}},
+                    {{0,-1},{0,0},{0,1},{0,2}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 1}, {1, 1}, {2, 1}, {3, 1}
+                };
+                break;
+            case OMino:
+                this._colorCode = #ffff00;
+                shapeData = new int[][][]{
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}},
+                    {{-1,-1},{-1,0},{0,-1},{0,0}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {2, 0}, {1, 1}, {2, 1}
+                };
+                break;
+            case SMino:
+                this._colorCode = #00ff00;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{0,1},{1,1}},
+                    {{1,-1},{1,0},{0,0},{0,1}},
+                    {{-1,0},{0,0},{0,1},{1,1}},
+                    {{1,-1},{1,0},{0,0},{0,1}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {2, 0}, {0, 1}, {1, 1}
+                };
+                break;
+            case ZMino:
+                this._colorCode = #ff0000;
+                shapeData = new int[][][]{
+                    {{-1,1},{0,1},{0,0},{1,0}},
+                    {{-1,-1},{-1,0},{0,0},{0,1}},
+                    {{-1,1},{0,1},{0,0},{1,0}},
+                    {{-1,-1},{-1,0},{0,0},{0,1}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 0}, {1, 0}, {1, 1}, {2, 1}
+                };
+                break;
+            case JMino:
+                this._colorCode = #0000ff;
+                shapeData = new int[][][]{
+                    {{-1,-1},{0,-1},{0,0},{0,1}},
+                    {{-1,1},{-1,0},{0,0},{1,0}},
+                    {{0,-1},{0,0},{0,1},{1,1}},
+                    {{1,-1},{-1,0},{0,0},{1,0}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+                break;
+            case LMino:
+                this._colorCode = #e67928;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{1,0},{1,1}},
+                    {{0,-1},{1,-1},{0,0},{0,1}},
+                    {{-1,-1},{-1,0},{0,0},{1,0}},
+                    {{0,-1},{0,0},{0,1},{-1,1}}
+                };
+                displayShapeData = new int[][]{
+                    {2, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+                break;
+            case TMino:
+                this._colorCode = #800080;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{0,1},{1,0}},
+                    {{0,-1},{1,0},{0,0},{0,1}},
+                    {{-1,0},{0,0},{0,1},{1,0}},
+                    {{0,-1},{0,0},{0,1},{-1,0}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+>>>>>>> develop-kensho
                 break;
             default:
+                _colorCode = 0;
+                shapeData = new int[][][]{};
+                displayShapeData = new int[][]{};
                 break;
         }
+        _buildMino(shapeData, displayShapeData);
+    }
+
+    MinoTypes getType(){
+        return _type;
     }
 
     void resetRotateIndex(){
         this._rotateIndex = 0;
     }
 
-    void _buildMino(int[][][] data){
+    void _buildMino(int[][][] data, int[][] displayData){
+        _displayArray2 = new int[][]{{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+        _shapes = new Coordinate[][]{};
+        if (_type == MinoTypes.Empty) return;
+
         int blockSize = data[0].length;
         Coordinate[][] shapes = new Coordinate[4][blockSize];
         for(int i=0; i<4; i++){
@@ -585,13 +1017,26 @@ public class Mino{
             }
         }
         this._shapes = shapes;
+
+        for (int i=0; i<4; i++){
+            int[] temp = displayData[i];
+            _displayArray2[temp[0]][temp[1]] = 1;
+        }
     }
 
+    /** 現在の回転された形状を返す */
     Coordinate[] getCurrentShape(){
+        if (_type == MinoTypes.Empty) return new Coordinate[]{};
         return _shapes[_rotateIndex];
     }
 
+    /** HOLDやNEXTの表示用２次元配列を返す。左上を(0, 0)とした4*2の空間。ブロックがある箇所は1, 何もない箇所は0。 */
+    int[][] getDisplayArray2(){
+        return _displayArray2;
+    }
+
     Coordinate[] getLeftRotatedShape(boolean leftRotate){
+        if (_type == MinoTypes.Empty) return new Coordinate[]{};
         int temp = _rotateIndex;
         if (leftRotate) temp--;
         else temp++;
@@ -607,6 +1052,7 @@ public class Mino{
         if (_rotateIndex > 3) _rotateIndex = 0;
     }
 
+<<<<<<< HEAD
     int getColorID(){
         return this._colorID;
     }
@@ -617,5 +1063,9 @@ public class Coordinate {
     Coordinate(int x,int y){
         this.x = x;
         this.y = y;
+=======
+    int getColor(){
+        return this._colorCode;
+>>>>>>> develop-kensho
     }
 }
