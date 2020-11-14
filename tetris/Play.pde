@@ -163,7 +163,9 @@ class CTetrisEnv extends Component{
 }
 
 class TetrisCore {
-    int _DOWN_INTERVAL = 60;
+    int SPEED_UP_DELETE_COUNT=5;
+    int _downInterval;
+    int _deleteCount;
     Stage _stage;
     TetrisMinoGenerator _minoGenerator;
     int _score;
@@ -183,6 +185,8 @@ class TetrisCore {
         _movingMinoTickCount = 0;
         _input = input;
         _hold = new Mino(MinoTypes.Empty);
+        _downInterval = 60;
+        _deleteCount = 0;
     }
 
     /**
@@ -222,17 +226,17 @@ class TetrisCore {
     void update(){
         if (_isGameOver) return;
         _movingMinoTickCount++;
-        if(_movingMinoTickCount>=_DOWN_INTERVAL){
+        if(_movingMinoTickCount>=_downInterval){
             if(!drop()){
                 placeMino();
             }
         }
 
         if (_input.isKeyPressed("drop", 5)) drop();
-        if (_input.isKeyPressed("left", 20)) moveLeft();
-        if (_input.isKeyPressed("right", 20)) moveRight();
-        if (_input.isKeyPressed("leftRotate", 20)) leftRotate();
-        if (_input.isKeyPressed("rightRotate", 20)) rightRotate();
+        if (_input.isKeyPressed("left", 10)) moveLeft();
+        if (_input.isKeyPressed("right", 10)) moveRight();
+        if (_input.isKeyPressed("leftRotate", 10)) leftRotate();
+        if (_input.isKeyPressed("rightRotate", 10)) rightRotate();
         if (_input.isKeyTyped("hardDrop")) hardDrop();
         if (_input.isKeyTyped("hold")) hold();
     }
@@ -298,9 +302,21 @@ class TetrisCore {
         _stage.placeMino();
         _holdFlag = false;
         if (this._stage.isOverFromStage()) gameOver();
-        this.addScore(this._stage.checkLinesFull());
+        int deleteLineAmount = this._stage.checkLinesFull();
+        if(deleteLineAmount>0){
+            _deleteCount++;
+            if(_deleteCount>=SPEED_UP_DELETE_COUNT){
+            this.speedUp();
+            _deleteCount = 0;
+            }
+        }
+        this.addScore(deleteLineAmount);
         this._stage.minoInit(this._minoGenerator.takeWaitingMino(0));
         this._movingMinoTickCount = 0;
+    }
+
+    void speedUp(){
+        this._downInterval = this._downInterval/2;
     }
 }
 
@@ -584,13 +600,13 @@ class TetrisMinoGenerator {
         list.add(new Mino(MinoTypes.LMino));
         list.add(new Mino(MinoTypes.JMino));
         list.add(new Mino(MinoTypes.TMino));
-        list.add(new Mino(MinoTypes.CrazyIMino));
+        /*list.add(new Mino(MinoTypes.CrazyIMino));
         list.add(new Mino(MinoTypes.CrazyOMino));
         list.add(new Mino(MinoTypes.CrazySMino));
         list.add(new Mino(MinoTypes.CrazyZMino));
         list.add(new Mino(MinoTypes.CrazyLMino));
         list.add(new Mino(MinoTypes.CrazyJMino));
-        list.add(new Mino(MinoTypes.CrazyTMino));
+        list.add(new Mino(MinoTypes.CrazyTMino));*/
         Collections.shuffle(list);
         _waitingMinoList.addAll(list);
     }
