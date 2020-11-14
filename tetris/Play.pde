@@ -410,6 +410,11 @@ class Stage {
             tempStage.add(temp);
         }
         for(Coordinate coordinate:_currentMino.getCurrentShape()){
+            if(_currentMinoPosition.y+coordinate.y==20){
+                System.out.println(_currentMinoPosition.y+coordinate.y);
+                System.out.println(_currentMinoPosition.x+coordinate.x);
+                System.out.println();
+            }
             tempStage.get(_currentMinoPosition.y+coordinate.y).set(_currentMinoPosition.x+coordinate.x,_currentMino.getColor());
         }
         ArrayList<ArrayList<Integer>> temp = new ArrayList<ArrayList<Integer>>(tempStage.subList(0, STAGE_HEIGHT));
