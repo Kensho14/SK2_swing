@@ -163,7 +163,9 @@ class CTetrisEnv extends Component{
 }
 
 class TetrisCore {
-    int _DOWN_INTERVAL = 60;
+    int SPEED_UP_DELETE_COUNT=5;
+    int _downInterval;
+    int _deleteCount;
     Stage _stage;
     TetrisMinoGenerator _minoGenerator;
     int _score;
@@ -183,6 +185,8 @@ class TetrisCore {
         _movingMinoTickCount = 0;
         _input = input;
         _hold = new Mino(MinoTypes.Empty);
+        _downInterval = 60;
+        _deleteCount = 0;
     }
 
     /**
@@ -222,17 +226,17 @@ class TetrisCore {
     void update(){
         if (_isGameOver) return;
         _movingMinoTickCount++;
-        if(_movingMinoTickCount>=_DOWN_INTERVAL){
+        if(_movingMinoTickCount>=_downInterval){
             if(!drop()){
                 placeMino();
             }
         }
 
         if (_input.isKeyPressed("drop", 5)) drop();
-        if (_input.isKeyPressed("left", 20)) moveLeft();
-        if (_input.isKeyPressed("right", 20)) moveRight();
-        if (_input.isKeyPressed("leftRotate", 20)) leftRotate();
-        if (_input.isKeyPressed("rightRotate", 20)) rightRotate();
+        if (_input.isKeyPressed("left", 10)) moveLeft();
+        if (_input.isKeyPressed("right", 10)) moveRight();
+        if (_input.isKeyPressed("leftRotate", 10)) leftRotate();
+        if (_input.isKeyPressed("rightRotate", 10)) rightRotate();
         if (_input.isKeyTyped("hardDrop")) hardDrop();
         if (_input.isKeyTyped("hold")) hold();
     }
@@ -298,9 +302,21 @@ class TetrisCore {
         _stage.placeMino();
         _holdFlag = false;
         if (this._stage.isOverFromStage()) gameOver();
-        this.addScore(this._stage.checkLinesFull());
+        int deleteLineAmount = this._stage.checkLinesFull();
+        if(deleteLineAmount>0){
+            _deleteCount++;
+            if(_deleteCount>=SPEED_UP_DELETE_COUNT){
+            this.speedUp();
+            _deleteCount = 0;
+            }
+        }
+        this.addScore(deleteLineAmount);
         this._stage.minoInit(this._minoGenerator.takeWaitingMino(0));
         this._movingMinoTickCount = 0;
+    }
+
+    void speedUp(){
+        this._downInterval = this._downInterval/2;
     }
 }
 
@@ -584,6 +600,13 @@ class TetrisMinoGenerator {
         list.add(new Mino(MinoTypes.LMino));
         list.add(new Mino(MinoTypes.JMino));
         list.add(new Mino(MinoTypes.TMino));
+        /*list.add(new Mino(MinoTypes.CrazyIMino));
+        list.add(new Mino(MinoTypes.CrazyOMino));
+        list.add(new Mino(MinoTypes.CrazySMino));
+        list.add(new Mino(MinoTypes.CrazyZMino));
+        list.add(new Mino(MinoTypes.CrazyLMino));
+        list.add(new Mino(MinoTypes.CrazyJMino));
+        list.add(new Mino(MinoTypes.CrazyTMino));*/
         Collections.shuffle(list);
         _waitingMinoList.addAll(list);
     }
@@ -610,7 +633,14 @@ enum MinoTypes {
     ZMino,
     LMino,
     TMino,
-    JMino
+    JMino,
+    CrazyIMino,
+    CrazyOMino,
+    CrazySMino,
+    CrazyZMino,
+    CrazyLMino,
+    CrazyTMino,
+    CrazyJMino,
 }
 
 class Mino{
@@ -705,6 +735,90 @@ class Mino{
                     {{0,-1},{1,0},{0,0},{0,1}},
                     {{-1,0},{0,0},{0,-1},{1,0}},
                     {{0,-1},{0,0},{0,1},{-1,0}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+                break;
+            case CrazyIMino:
+                this._colorCode = #00ffff;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{1,0},{0,1},{0,2},{0,3},{-1,4},{0,4},{1,4}},
+                    {{-2,1},{-2,2},{-2,3},{-1,2},{0,2},{1,2},{2,1},{2,2},{2,3}},
+                    {{-1,0},{0,0},{1,0},{0,1},{0,2},{0,3},{-1,4},{0,4},{1,4}},
+                    {{-2,1},{-2,2},{-2,3},{-1,2},{0,2},{1,2},{2,1},{2,2},{2,3}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 1}, {1, 1}, {2, 1}, {3, 1}
+                };
+                break;
+            case CrazyOMino:
+                this._colorCode = #ffff00;
+                shapeData = new int[][][]{
+                    {{0,0},{1,0},{-1,1},{2,1},{-1,2},{2,2},{-1,3},{2,3},{0,4},{1,4}},
+                    {{-1,0},{0,0},{1,0},{-2,1},{2,1},{-2,2},{2,2},{-1,3},{0,3},{1,3}},
+                    {{0,0},{1,0},{-1,1},{2,1},{-1,2},{2,2},{-1,3},{2,3},{0,4},{1,4}},
+                    {{-1,0},{0,0},{1,0},{-2,1},{2,1},{-2,2},{2,2},{-1,3},{0,3},{1,3}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {2, 0}, {1, 1}, {2, 1}
+                };
+                break;
+            case CrazySMino:
+                this._colorCode = #00ff00;
+                shapeData = new int[][][]{
+                    {{-1,0},{0,0},{1,0},{2,1},{-1,2},{0,2},{1,2},{-2,3},{-1,4},{0,4},{1,4}},
+                    {{-2,1},{-2,2},{-2,3},{-1,0},{0,1},{0,2},{0,3},{1,4},{2,1},{2,2},{2,3}},
+                    {{-1,0},{0,0},{1,0},{2,1},{-1,2},{0,2},{1,2},{-2,3},{-1,4},{0,4},{1,4}},
+                    {{-2,1},{-2,2},{-2,3},{-1,0},{0,1},{0,2},{0,3},{1,4},{2,1},{2,2},{2,3}}
+                };
+                displayShapeData = new int[][]{
+                    {1, 0}, {2, 0}, {0, 1}, {1, 1}
+                };
+                break;
+            case CrazyZMino:
+                this._colorCode = #ff0000;
+                shapeData = new int[][][]{
+                    {{-1,4},{0,4},{1,4},{1,3},{0,2},{-1,1},{-1,0},{0,0},{1,0}},
+                    {{-2,3},{-1,3},{2,3},{-2,2},{0,2},{2,2},{-2,1},{1,1},{2,1}},
+                    {{-1,4},{0,4},{1,4},{1,3},{0,2},{-1,1},{-1,0},{0,0},{1,0}},
+                    {{-2,3},{-1,3},{2,3},{-2,2},{0,2},{2,2},{-2,1},{1,1},{2,1}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 0}, {1, 0}, {1, 1}, {2, 1}
+                };
+                break;
+            case CrazyJMino:
+                this._colorCode = #0000ff;
+                shapeData = new int[][][]{
+                    {{1,4},{1,3},{1,2},{-1,1},{1,1},{-1,0},{0,0},{1,0}},
+                    {{-2,3},{-1,3},{-2,2},{-2,1},{-1,1},{0,1},{1,1},{2,1}},
+                    {{-1,4},{0,4},{1,4},{-1,3},{1,3},{-1,2},{-1,1},{-1,0}},
+                    {{-2,3},{-1,3},{0,3},{1,3},{2,3},{2,2},{1,1},{2,1}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+                break;
+            case CrazyLMino:
+                this._colorCode = #e67928;
+                shapeData = new int[][][]{
+                    {{-1,4},{-1,3},{-1,2},{-1,1},{-1,0},{0,0},{1,0}},
+                    {{-2,3},{-1,3},{0,3},{1,3},{2,3},{-2,2},{-2,1}},
+                    {{-1,4},{0,4},{1,4},{1,3},{1,2},{1,1},{1,0}},
+                    {{2,3},{2,2},{-2,1},{-1,1},{0,1},{1,1},{2,1}}
+                };
+                displayShapeData = new int[][]{
+                    {2, 0}, {0, 1}, {1, 1}, {2, 1}
+                };
+                break;
+            case CrazyTMino:
+                this._colorCode = #800080;
+                shapeData = new int[][][]{
+                    {{-1,3},{0,3},{1,3},{0,2},{0,1},{0,0}},
+                    {{1,3},{-2,2},{-1,2},{0,2},{1,2},{1,1}},
+                    {{0,4},{0,3},{0,2},{-1,1},{0,1},{1,1}},
+                    {{-1,3},{-1,2},{0,2},{1,2},{2,2},{-1,1}}
                 };
                 displayShapeData = new int[][]{
                     {1, 0}, {0, 1}, {1, 1}, {2, 1}
