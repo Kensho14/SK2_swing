@@ -16,7 +16,7 @@
 \date{\today}
 \maketitle
 \section{概要}
-本プロジェクトではテトリスライクな落ち物パズルゲームを作成する。
+本プロジェクトでは以下の図\ref{play}のようなテトリスライクな落ち物パズルゲームを作成する。
 本ゲームはシングルプレイであり、ゲームオーバーまでのスコアを競うゲームである。
 点数によるランキングをリザルト画面に表示する。
 \subsection{ゲームルール}
@@ -67,6 +67,8 @@
   \item NEXTに表示されるミノの数は３つとする。
   \item HOLDを使用することができる。
   \item スコアは$10 \times 2^{一度に消した行数-1}$として計算する。
+  \item ミノは60フレームで１ブロック分落下する。
+  \item 5回行を消すとミノの落下するフレーム数を半分になる。\\(落下速度が倍になる)
 \end{itemize}
 
 \subsection{操作方法}
@@ -75,21 +77,29 @@
   \begin{description}
     \item[A] 左移動
     \item[D] 右移動
-    \item[W] ハードドロップ
+    \item[W] ハードドロップ(一番下までドロップ)
     \item[S] 落下速度をあげる
-    \item[G] テトリミノを回転
-    \item[E] テトリミノをHOLD
-    \item[Esc] メニュー画面に戻る       
+    \item[G] 左に回転する
+    \item[H] 右に回転する
+    \item[E] テトリミノをHOLD      
   \end{description}
 \end{quote}
 
 \section{詳細設計}
-設計したクラス図は以下の図\ref{classFigure}である。
-\begin{figure}[htbp]
+設計したクラス図の継承関係は以下の図\ref{classFigure}であり、has-a関係は図\ref{classFigure2}である。
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=\textwidth]{class.png}
-\caption{クラス図}
+\caption{クラス図の継承関係}
 \label{classFigure}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.6\textwidth]{class2.png}
+\caption{クラス図のhas-a関係}
+\label{classFigure2}
 \end{center}
 \end{figure}
 
@@ -110,6 +120,9 @@
 \end{description}
 \clearpage
 CTetrisEnvコンポーネント内におけるゲームロジックのクラス図は以下の図\ref{logic}である。
+
+本プレイ画面での実装では、CTetrisEnvはMVCデザインパターンにおけるView、TetrisCoreがModel、InputがControllの役割を担っている。
+
 \begin{figure}[H]
 \begin{center}
 \includegraphics[width=75mm]{logic.png}
@@ -142,11 +155,21 @@ CTetrisEnvコンポーネント内におけるゲームロジックのシーケ�
 
 \section{役割分担}
 \begin{itemize}
-  \item 設計等は基本的に全員で集まって行う。
-  \item メニュー画面の実装を佐藤が担当する。
-  \item ランキング画面の実装を玉城が担当する。
-  \item プレイ画面のリード実装を知念が担当する。基本部分ができたら，他２人も実装に参加する。
+  \item 設計等は基本的に全員で集まって行った
+  \item メニュー画面の実装を佐藤が担当した。
+  \item ランキング画面の実装を玉城が担当した。
+  \item プレイ画面のリード実装を知念が担当した。
+  \item プレイ画面のmodel部分の実装を知念が担当した。
+  \item プレイ画面のview部分の実装を玉城が担当した。
 \end{itemize}
+作業時間は以下のようになった。
+\begin{quote}
+\begin{description}
+\item[玉城] 約16時間
+\item[佐藤] 約13時間
+\item[知念] 約14時間
+\end{description}
+\end{quote}
 
 \begin{thebibliography}{99}
   \bibitem{c0} テトリス-Wikipedia，\url{https://ja.wikipedia.org/wiki/%E3%83%86%E3%83%88%E3%83%AA%E3%82%B9}，2020/11/07 参照.
