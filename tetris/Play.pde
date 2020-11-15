@@ -19,16 +19,35 @@ class Coordinate {
 /** プレイシーン */
 class SPlay extends Scene{
     CTetrisEnv _tetrisEnv;
+    boolean _denchuMode;
 
-    SPlay(){
+    CButton _retryBtn;
+    CButton _rankingBtn;
+    CButton _menuBtn;
+
+    SPlay(boolean denchuMode){
         super();
+        _denchuMode = denchuMode;
+    }
+    SPlay(){
+        this(false);
     }
 
     @Override
     void setup(){
         super.setup();
-        _tetrisEnv = new CTetrisEnv(340, 50, 600, 700, new Input());
+        _tetrisEnv = new CTetrisEnv(340, 50, 600, 700, new Input(), _denchuMode);
         addComponent(_tetrisEnv);
+
+        _retryBtn = new CButton(1090, 600, 140, 50, "Retry");
+        _retryBtn.setEnabled(false);
+        addComponent(_retryBtn);
+        _rankingBtn = new CButton(940, 600, 140, 50, "Ranking");
+        _rankingBtn.setEnabled(false);
+        addComponent(_rankingBtn);
+        _menuBtn = new CButton(940, 600, 140, 50, "Menu");
+        _menuBtn.setEnabled(false);
+        addComponent(_menuBtn);
     }
 
     void draw(){
@@ -36,9 +55,27 @@ class SPlay extends Scene{
         super.draw();
 
         if (_tetrisEnv.getIsGameOver()){
-            println("Game Over!\nScore: " + _tetrisEnv.getScore());
-            addRanking(_tetrisEnv.getScore(), _tetrisEnv.getElapsedSecs());
+            fill(#ff7f00);
+            rect(0, (height/2)-50, width, 150);
+            fill(#ffffff);
+            textAlign(CENTER, CENTER);
+            textSize(40);
+            text("Game Over!\nScore: "+_tetrisEnv.getScore()+"\nTime: "+formatTime(_tetrisEnv.getElapsedSecs()), 0, (height/2)-50, width, 150);
+
+            _retryBtn.setEnabled(true);
+            if (!_denchuMode) _rankingBtn.setEnabled(true);
+            else _menuBtn.setEnabled(true);
+        }
+        if (_retryBtn.isClicked()){
+            if (!_denchuMode) addRanking(_tetrisEnv.getScore(), _tetrisEnv.getElapsedSecs());
+            app.changeScene(new SPlay(_denchuMode));
+        }
+        if (_rankingBtn.isClicked()){
+            if (!_denchuMode) addRanking(_tetrisEnv.getScore(), _tetrisEnv.getElapsedSecs());
             app.changeScene(new SRanking(true));
+        }
+        if (_menuBtn.isClicked()){
+            app.changeScene(new SMenu());
         }
     }
 }
@@ -50,9 +87,9 @@ class CTetrisEnv extends Component{
     long _startTime;
     int _elapsedSecs;
 
-    CTetrisEnv(float x, float y, float w, float h, Input input){
+    CTetrisEnv(float x, float y, float w, float h, Input input, boolean denchuMode){
         super(x, y, w, h);
-        core = new TetrisCore(input);
+        core = new TetrisCore(input, denchuMode);
     }
 
     @Override
@@ -135,12 +172,6 @@ class CTetrisEnv extends Component{
         text("Score:\n"+core.getScore(), currX, currY);
     }
 
-    /** 秒数をmm:ss形式にして返す */
-    String formatTime(int seconds){
-        int minutes = seconds / 60;
-        return String.format("%02d:%02d", minutes, seconds%60);
-    }
-
     void drawTime(float startX, float startY){
         float currX = startX;
         float currY = startY + (CELL_SIZE/2);
@@ -175,10 +206,10 @@ class TetrisCore {
     Input _input;
     boolean _isGameOver;
 
-    TetrisCore(Input input){
+    TetrisCore(Input input, boolean denchuMode){
         _isGameOver = false;
         _stage = new Stage();
-        _minoGenerator  = new TetrisMinoGenerator();
+        _minoGenerator  = new TetrisMinoGenerator(denchuMode);
         _stage.minoInit(_minoGenerator.takeWaitingMino(0));
         _score = 0;
         _holdFlag = false;
@@ -585,8 +616,10 @@ class Stage {
 
 class TetrisMinoGenerator {
     ArrayList<Mino> _waitingMinoList;
+    boolean _denchuMode;
 
-    TetrisMinoGenerator(){
+    TetrisMinoGenerator(boolean denchuMode){
+        _denchuMode = denchuMode;
         _waitingMinoList = new ArrayList<Mino>();
         _generate();
     }
@@ -600,13 +633,15 @@ class TetrisMinoGenerator {
         list.add(new Mino(MinoTypes.LMino));
         list.add(new Mino(MinoTypes.JMino));
         list.add(new Mino(MinoTypes.TMino));
-        /*list.add(new Mino(MinoTypes.CrazyIMino));
-        list.add(new Mino(MinoTypes.CrazyOMino));
-        list.add(new Mino(MinoTypes.CrazySMino));
-        list.add(new Mino(MinoTypes.CrazyZMino));
-        list.add(new Mino(MinoTypes.CrazyLMino));
-        list.add(new Mino(MinoTypes.CrazyJMino));
-        list.add(new Mino(MinoTypes.CrazyTMino));*/
+        if (_denchuMode){
+            list.add(new Mino(MinoTypes.CrazyIMino));
+            list.add(new Mino(MinoTypes.CrazyOMino));
+            list.add(new Mino(MinoTypes.CrazySMino));
+            list.add(new Mino(MinoTypes.CrazyZMino));
+            list.add(new Mino(MinoTypes.CrazyLMino));
+            list.add(new Mino(MinoTypes.CrazyJMino));
+            list.add(new Mino(MinoTypes.CrazyTMino));
+        }
         Collections.shuffle(list);
         _waitingMinoList.addAll(list);
     }

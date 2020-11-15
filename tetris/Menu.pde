@@ -1,5 +1,6 @@
 class SMenu extends Scene {
     CButton _btnStart;
+    CButton _btnDenchuStart;
     CButton _btnRanking;
     CButton _btnend;
     PFont tetoris;
@@ -14,6 +15,8 @@ class SMenu extends Scene {
         background(211, 211, 211);
         _btnStart = new CButton(500, 400, 250, 70, "Start");
         addComponent(_btnStart);
+        _btnDenchuStart = new CButton(770, 400, 250, 70, "(denchu)");
+        addComponent(_btnDenchuStart);
         _btnRanking = new CButton(500, 500, 250, 70, "Ranking");
         addComponent(_btnRanking);
         _btnend = new CButton(500, 600, 250, 70, "End");
@@ -27,8 +30,12 @@ class SMenu extends Scene {
     void draw(){
         super.draw();
         if (_btnStart.isClicked()){
-            app.changeScene(new SPlay());
+            app.changeScene(new SPlay(false));
             println("Start pressed!");
+        }
+        if (_btnDenchuStart.isClicked()){
+            app.changeScene(new SPlay(true));
+            println("denchu pressed!");
         }
         if (_btnRanking.isClicked()){
             app.changeScene(new SRanking(false));

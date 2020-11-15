@@ -68,12 +68,6 @@ class CRankingTable extends Component {
         Collections.sort(_rankingData, new RankingEntryComparator());
     }
 
-    /** 秒数をmm:ss形式にして返す */
-    String formatTime(int seconds){
-        int minutes = seconds / 60;
-        return String.format("%02d:%02d", minutes, seconds%60);
-    }
-
     @Override
     void setup(){
         super.setup();
