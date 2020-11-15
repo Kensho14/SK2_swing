@@ -108,9 +108,9 @@
   \item[RankingEntry] ポイントと生存時間を格納するクラス。
   
 \end{description}
-
+\clearpage
 CTetrisEnvコンポーネント内におけるゲームロジックのクラス図は以下の図\ref{logic}である。
-\begin{figure}[htbp]
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=75mm]{logic.png}
 \caption{ゲームロジックのクラス図}
@@ -121,10 +121,12 @@ CTetrisEnvコンポーネント内におけるゲームロジックのクラス�
 図\ref{logic}の各クラスの概要を以下に示す。
 \begin{description}
 \item[CTetrisEnv] ゲームロジックを包むコンポーネント
-\item[TetrisController] ゲームロジックの中枢を担い、ゲームの進行を行うクラス
+\item[TetrisCore] ゲームロジックの中枢を担い、ゲームの進行を行うクラス
 \item[Stage] Stageのブロックの座標やミノの操作を行うクラス
 \item[TetrisMinoGenerator] ミノの生成や次のミノの種類を返す
 \item[Input] プレイヤーからの入力を受ける
+\item[Mino] ミノの形のデータや回転の状態を持つクラス
+\item[Coordinate] Stageにおける座標情報を持つクラス  
 \end{description}
 
 CTetrisEnvコンポーネント内におけるゲームロジックのシーケンス図は以下の図\ref{sequence}である。
