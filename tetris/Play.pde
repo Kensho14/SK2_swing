@@ -409,7 +409,7 @@ class Input{
 class Stage {
     int STAGE_WIDTH = 10;
     int STAGE_HEIGHT = 20;
-    int  HIDDEN_HEIGHT = 4;
+    int  HIDDEN_HEIGHT = 10;
     Coordinate DEFAULT_MINO_SPAWN_COORDINATE = new Coordinate(4, 19);
     /** 何もミノがない箇所の色 */
     int BG_COLOR = #b2b2b2;
@@ -641,6 +641,7 @@ class TetrisMinoGenerator {
             list.add(new Mino(MinoTypes.CrazyLMino));
             list.add(new Mino(MinoTypes.CrazyJMino));
             list.add(new Mino(MinoTypes.CrazyTMino));
+            list.add(new Mino(MinoTypes.Denchu));
         }
         Collections.shuffle(list);
         _waitingMinoList.addAll(list);
@@ -676,6 +677,7 @@ enum MinoTypes {
     CrazyLMino,
     CrazyTMino,
     CrazyJMino,
+    Denchu
 }
 
 class Mino{
@@ -859,6 +861,18 @@ class Mino{
                     {1, 0}, {0, 1}, {1, 1}, {2, 1}
                 };
                 break;
+            case Denchu:
+                this._colorCode = #ffff00;
+                shapeData = new int[][][]{
+                    {{-3,6},{-2,6},{3,6},{4,6},{-2,5},{-1,5},{0,5},{1,5},{2,5},{3,5},{-1,4},{0,4},{1,4},{2,4},{-1,3},{0,3},{1,3},{2,3},{-1,2},{0,2},{1,2},{2,2},{0,1},{1,1}},
+                    {{3,7},{2,6},{3,6},{-1,5},{0,5},{1,5},{2,5},{-2,4},{-1,4},{0,4},{1,4},{2,4},{-2,3},{-1,3},{0,3},{1,3},{2,3},{-1,2},{0,2},{1,2},{2,2},{2,1},{3,1},{3,0}},
+                    {{0,6},{1,6},{-1,5},{0,5},{1,5},{2,5},{-1,4},{0,4},{1,4},{2,4},{-1,3},{0,3},{1,3},{2,3},{-2,2},{-1,2},{0,2},{1,2},{2,2},{3,2},{-3,1},{-2,1},{3,1},{4,1}},
+                    {{-2,7},{-2,6},{-1,6},{-1,5},{0,5},{1,5},{2,5},{-1,4},{0,4},{1,4},{2,4},{3,4},{-1,3},{0,3},{1,3},{2,3},{3,3},{-1,2},{0,2},{1,2},{2,2},{-2,1},{-1,1},{-2,0}}
+                };
+                displayShapeData = new int[][]{
+                    {0, 1}, {1, 0}, {2, 0}, {3, 1}
+                };
+                break;
             default:
                 _colorCode = 0;
                 shapeData = new int[][][]{};
@@ -881,6 +895,7 @@ class Mino{
         _shapes = new Coordinate[][]{};
         if (_type == MinoTypes.Empty) return;
 
+        System.out.println(data[0].length);
         int blockSize = data[0].length;
         Coordinate[][] shapes = new Coordinate[4][blockSize];
         for(int i=0; i<4; i++){
